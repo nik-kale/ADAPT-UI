@@ -1,0 +1,226 @@
+ADAPT-UI Architecture Diagram
+==============================
+
+┌───────────────────────────────────────────────────────────────────────────┐
+│                         PRESENTATION LAYER                                │
+│                                                                           │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐    │
+│  │    Graph    │  │  Timeline   │  │    Chat     │  │  Insights   │    │
+│  │   Viewer    │  │   Viewer    │  │ Interface   │  │    Panel    │    │
+│  │             │  │             │  │             │  │             │    │
+│  │  ReactFlow  │  │ Event List  │  │  Messages   │  │  Live Feed  │    │
+│  │  + D3       │  │  Filters    │  │  Input      │  │  Agents     │    │
+│  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘    │
+│                                                                           │
+│  ┌─────────────┐                                                         │
+│  │ Remediation │                                                         │
+│  │   Viewer    │     React Components (TypeScript + Tailwind CSS)       │
+│  │             │                                                         │
+│  │  Step List  │                                                         │
+│  │  Progress   │                                                         │
+│  └─────────────┘                                                         │
+└───────────────────────────────────────────────────────────────────────────┘
+                                    ↓ Props & State
+┌───────────────────────────────────────────────────────────────────────────┐
+│                      STATE MANAGEMENT LAYER                               │
+│                                                                           │
+│  ┌──────────────────────────────────────────────────────────────────┐   │
+│  │                     React Custom Hooks                            │   │
+│  │                                                                   │   │
+│  │  useRCAGraph  →  Fetch & manage RCA graph state                  │   │
+│  │  useTimeline  →  Fetch & manage timeline events                  │   │
+│  │  useChat      →  Manage chat messages & sending                  │   │
+│  │  useInsights  →  Stream agent insights (WebSocket)               │   │
+│  │  useRemediation → Manage remediation plan & step updates         │   │
+│  │                                                                   │   │
+│  │  Features: Loading states, Error handling, Caching               │   │
+│  └──────────────────────────────────────────────────────────────────┘   │
+└───────────────────────────────────────────────────────────────────────────┘
+                                    ↓ API Calls
+┌───────────────────────────────────────────────────────────────────────────┐
+│                         API CLIENT LAYER                                  │
+│                                                                           │
+│  ┌──────────────────────────────────────────────────────────────────┐   │
+│  │                    AdaptAPIClient                                 │   │
+│  │                                                                   │   │
+│  │  REST Methods:                    WebSocket:                     │   │
+│  │  ├─ getRCAGraph()                 ├─ connectWebSocket()          │   │
+│  │  ├─ getTimeline()                 ├─ disconnectWebSocket()       │   │
+│  │  ├─ getChatSession()              └─ Real-time updates           │   │
+│  │  ├─ sendChatMessage()                                            │   │
+│  │  ├─ getInsights()                                                │   │
+│  │  ├─ getRemediationPlan()                                         │   │
+│  │  └─ updateStepStatus()                                           │   │
+│  │                                                                   │   │
+│  │  Transport: HTTP/HTTPS + WebSocket (WSS)                         │   │
+│  └──────────────────────────────────────────────────────────────────┘   │
+└───────────────────────────────────────────────────────────────────────────┘
+                        ↓ HTTP/WS Requests
+┌───────────────────────────────────────────────────────────────────────────┐
+│                      BACKEND SERVICES LAYER                               │
+│                                                                           │
+│  ┌──────────────────────────────────────────────────────────────────┐   │
+│  │              Your RCA Engine / AI Agents / Services               │   │
+│  │                                                                   │   │
+│  │  ┌────────────────┐  ┌────────────────┐  ┌────────────────┐     │   │
+│  │  │   Incident     │  │   RCA Graph    │  │   Timeline     │     │   │
+│  │  │  Management    │  │   Generator    │  │  Aggregator    │     │   │
+│  │  └────────────────┘  └────────────────┘  └────────────────┘     │   │
+│  │                                                                   │   │
+│  │  ┌────────────────┐  ┌────────────────┐  ┌────────────────┐     │   │
+│  │  │   AI Agent     │  │  Remediation   │  │   Telemetry    │     │   │
+│  │  │ Orchestrator   │  │    Planner     │  │     System     │     │   │
+│  │  └────────────────┘  └────────────────┘  └────────────────┘     │   │
+│  │                                                                   │   │
+│  └──────────────────────────────────────────────────────────────────┘   │
+│                                                                           │
+│  Data Sources: Metrics, Logs, Traces, Events, Knowledge Base             │
+└───────────────────────────────────────────────────────────────────────────┘
+
+
+WIDGET EMBEDDING ARCHITECTURE
+==============================
+
+┌───────────────────────────────────────────────────────────────────────────┐
+│                       Host Application                                    │
+│                                                                           │
+│  ┌─────────────────────────────────────────────────────────────────┐    │
+│  │  <div id="rca-graph"></div>                                     │    │
+│  │  <div id="timeline"></div>                                      │    │
+│  │  <div id="chat"></div>                                          │    │
+│  └─────────────────────────────────────────────────────────────────┘    │
+│                              ↓                                            │
+│  ┌─────────────────────────────────────────────────────────────────┐    │
+│  │  const graph = new GraphWidget('#rca-graph', 'inc-123');        │    │
+│  │  const timeline = new TimelineWidget('#timeline', 'inc-123');   │    │
+│  │  const chat = new ChatWidget('#chat', 'inc-123');               │    │
+│  └─────────────────────────────────────────────────────────────────┘    │
+│                              ↓                                            │
+│  ┌─────────────────────────────────────────────────────────────────┐    │
+│  │         Each widget manages its own React root                  │    │
+│  │         Independent state and lifecycle                         │    │
+│  └─────────────────────────────────────────────────────────────────┘    │
+└───────────────────────────────────────────────────────────────────────────┘
+
+
+DATA FLOW: RCA GRAPH EXAMPLE
+=============================
+
+User Action
+    ↓
+Component (RCAGraphViewer)
+    ↓
+Hook (useRCAGraph)
+    ↓
+API Client (client.getRCAGraph())
+    ↓
+HTTP Request → GET /api/rca/:id/graph
+    ↓
+Backend RCA Engine
+    ↓
+HTTP Response ← { success: true, data: { nodes, edges, metadata } }
+    ↓
+API Client returns response
+    ↓
+Hook updates state (setGraph)
+    ↓
+Component re-renders with new data
+    ↓
+ReactFlow renders graph visualization
+    ↓
+User sees interactive graph
+
+
+REAL-TIME UPDATES FLOW
+=======================
+
+Backend Event (new insight generated)
+    ↓
+WebSocket Server sends message
+    ↓
+WebSocket Client (in AdaptAPIClient)
+    ↓
+onMessage callback in useInsights hook
+    ↓
+State updated (setInsights)
+    ↓
+InsightsPanel component re-renders
+    ↓
+New insight appears with animation
+    ↓
+User sees live update
+
+
+COMPONENT LIFECYCLE
+===================
+
+Mount Phase:
+1. Component mounts
+2. Hook executes useEffect
+3. API call initiated (setLoading(true))
+4. Response received
+5. State updated (setData, setLoading(false))
+6. Component renders with data
+
+Update Phase:
+1. Props/state change
+2. Component re-renders
+3. Memoized values recalculated
+4. Only changed parts update in DOM
+
+Unmount Phase:
+1. Component unmounts
+2. Cleanup functions run
+3. WebSocket disconnected
+4. Event listeners removed
+
+
+DEPLOYMENT SCENARIOS
+====================
+
+Scenario 1: NPM Package
+┌─────────────────────┐
+│  npm install        │
+│  @adapt/ui-toolkit  │
+└─────────────────────┘
+         ↓
+┌─────────────────────┐
+│  import { ... }     │
+│  from package       │
+└─────────────────────┘
+         ↓
+┌─────────────────────┐
+│  Use in React app   │
+└─────────────────────┘
+
+Scenario 2: CDN
+┌─────────────────────┐
+│  <script> tag       │
+│  loads from CDN     │
+└─────────────────────┘
+         ↓
+┌─────────────────────┐
+│  AdaptUI global     │
+│  object available   │
+└─────────────────────┘
+         ↓
+┌─────────────────────┐
+│  Create widgets     │
+│  with vanilla JS    │
+└─────────────────────┘
+
+Scenario 3: Embedded App
+┌─────────────────────┐
+│  Build demo app     │
+│  npm run build      │
+└─────────────────────┘
+         ↓
+┌─────────────────────┐
+│  Host static files  │
+│  on web server      │
+└─────────────────────┘
+         ↓
+┌─────────────────────┐
+│  Embed via iframe   │
+│  or direct link     │
+└─────────────────────┘
