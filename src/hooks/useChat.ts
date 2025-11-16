@@ -40,7 +40,14 @@ export const useChat = (incidentId: string) => {
     const response = await defaultClient.sendChatMessage(incidentId, content);
 
     if (response.success && response.data) {
-      setMessages(prev => [...prev, response.data!]);
+      // Add both user and assistant messages to keep state in sync
+      const { userMessage, assistantMessage } = response.data as any;
+      if (userMessage && assistantMessage) {
+        setMessages(prev => [...prev, userMessage, assistantMessage]);
+      } else {
+        // Fallback for backward compatibility
+        setMessages(prev => [...prev, response.data!]);
+      }
     } else {
       setError(response.error?.message || 'Failed to send message');
     }

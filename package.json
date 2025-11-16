@@ -23,24 +23,28 @@
     "preview": "vite preview",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "server": "node server/index.js",
-    "dev:full": "concurrently \"npm run dev\" \"npm run server\""
+    "dev:full": "concurrently \"npm run dev\" \"npm run server\"",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "reactflow": "^11.10.4",
-    "d3": "^7.8.5",
-    "d3-hierarchy": "^3.1.2",
-    "framer-motion": "^10.16.16",
     "lucide-react": "^0.294.0",
-    "clsx": "^2.0.0",
     "date-fns": "^2.30.0",
-    "recharts": "^2.10.3"
+    "@tanstack/react-query": "^5.17.19",
+    "dagre": "^0.8.5",
+    "zod": "^3.22.4",
+    "html2canvas": "^1.4.1"
   },
   "devDependencies": {
     "@types/react": "^18.2.43",
     "@types/react-dom": "^18.2.17",
-    "@types/d3": "^7.4.3",
+    "@types/dagre": "^0.7.52",
     "@typescript-eslint/eslint-plugin": "^6.14.0",
     "@typescript-eslint/parser": "^6.14.0",
     "@vitejs/plugin-react": "^4.2.1",
@@ -56,7 +60,17 @@
     "typescript": "^5.2.2",
     "vite": "^5.0.8",
     "vite-plugin-dts": "^3.7.0",
-    "ws": "^8.16.0"
+    "ws": "^8.16.0",
+    "@testing-library/react": "^14.1.2",
+    "@testing-library/jest-dom": "^6.1.5",
+    "@testing-library/user-event": "^14.5.1",
+    "vitest": "^1.1.0",
+    "@vitest/ui": "^1.1.0",
+    "jsdom": "^23.0.1",
+    "@storybook/react": "^7.6.6",
+    "@storybook/react-vite": "^7.6.6",
+    "@storybook/addon-essentials": "^7.6.6",
+    "storybook": "^7.6.6"
   },
   "keywords": [
     "rca",

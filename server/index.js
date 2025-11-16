@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { WebSocketServer } from 'ws';
 import { createServer } from 'http';
+import { URL } from 'url';
 import {
   incidents,
   getIncident,
@@ -16,7 +17,12 @@ import {
 
 const app = express();
 const server = createServer(app);
-const wss = new WebSocketServer({ server });
+
+// WebSocket server with path filtering
+const wss = new WebSocketServer({
+  server,
+  path: '/ws',
+});
 
 const PORT = process.env.PORT || 3001;
 
@@ -28,38 +34,55 @@ app.use(express.json());
 const clients = new Map();
 
 wss.on('connection', (ws, req) => {
-  const incidentId = req.url?.split('/').pop();
+  // Proper URL parsing to extract incident ID
+  const url = new URL(req.url, `http://${req.headers.host}`);
+  const pathParts = url.pathname.split('/').filter(Boolean);
+  const incidentId = pathParts[pathParts.length - 1];
+
   console.log(`WebSocket client connected for incident: ${incidentId}`);
 
-  if (incidentId) {
-    clients.set(incidentId, ws);
-
-    ws.on('close', () => {
-      clients.delete(incidentId);
-      console.log(`WebSocket client disconnected for incident: ${incidentId}`);
-    });
-
-    // Simulate live insights
-    const interval = setInterval(() => {
-      if (ws.readyState === ws.OPEN) {
-        ws.send(JSON.stringify({
-          type: 'insight',
-          payload: {
-            id: `insight-${Date.now()}`,
-            agentName: 'Live Agent',
-            type: 'progress',
-            content: 'Analyzing system metrics...',
-            timestamp: new Date().toISOString(),
-            confidence: Math.floor(Math.random() * 30) + 70,
-          },
-        }));
-      }
-    }, 10000); // Send update every 10 seconds
-
-    ws.on('close', () => {
-      clearInterval(interval);
-    });
+  if (!incidentId || incidentId === 'ws') {
+    ws.close(1008, 'Missing incident ID in path');
+    return;
   }
+
+  clients.set(incidentId, ws);
+
+  // Send connection confirmation
+  ws.send(JSON.stringify({
+    type: 'connected',
+    incidentId,
+    timestamp: new Date().toISOString(),
+  }));
+
+  // Simulate live insights
+  const interval = setInterval(() => {
+    if (ws.readyState === ws.OPEN) {
+      ws.send(JSON.stringify({
+        type: 'insight',
+        payload: {
+          id: `insight-${Date.now()}`,
+          agentName: 'Live Agent',
+          type: 'progress',
+          content: 'Analyzing system metrics...',
+          timestamp: new Date().toISOString(),
+          confidence: Math.floor(Math.random() * 30) + 70,
+        },
+      }));
+    } else {
+      clearInterval(interval);
+    }
+  }, 10000); // Send update every 10 seconds
+
+  ws.on('error', (error) => {
+    console.error(`WebSocket error for incident ${incidentId}:`, error);
+  });
+
+  ws.on('close', () => {
+    clearInterval(interval);
+    clients.delete(incidentId);
+    console.log(`WebSocket client disconnected for incident: ${incidentId}`);
+  });
 });
 
 // API Routes
@@ -115,8 +138,12 @@ app.post('/api/chat/:incidentId/message', (req, res) => {
     return res.status(400).json({ error: 'Message is required' });
   }
 
-  const response = sendMessage(req.params.incidentId, message);
-  res.json(response);
+  const result = sendMessage(req.params.incidentId, message);
+  if (!result) {
+    return res.status(404).json({ error: 'Chat session not found' });
+  }
+
+  res.json(result);
 });
 
 // Insights
@@ -153,6 +180,6 @@ app.patch('/api/remediation/:incidentId/steps/:stepId', (req, res) => {
 
 // Start server
 server.listen(PORT, () => {
-  console.log(`ADAPT-UI Mock API Server running on http://localhost:${PORT}`);
-  console.log(`WebSocket server ready on ws://localhost:${PORT}/ws/:incidentId`);
+  console.log(`🚀 ADAPT-UI Mock API Server running on http://localhost:${PORT}`);
+  console.log(`   WebSocket endpoint: ws://localhost:${PORT}/ws/:incidentId`);
 });

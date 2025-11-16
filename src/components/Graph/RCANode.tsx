@@ -1,7 +1,7 @@
 import React from 'react';
 import { Handle, Position } from 'reactflow';
 import { RCANode as RCANodeType } from '@types/index';
-import { getNodeColor, getStatusColor, hexToRgba } from '@utils/colors';
+import { getNodeColor, getStatusColor, getSeverityColor, hexToRgba } from '@utils/colors';
 import { AlertCircle, CheckCircle, Clock, XCircle, Loader } from 'lucide-react';
 
 interface RCANodeProps {
@@ -16,9 +16,9 @@ const statusIcons = {
   blocked: AlertCircle,
 };
 
-const RCANode: React.FC<RCANodeProps> = ({ data }) => {
+const RCANode: React.FC<RCANodeProps> = React.memo(({ data }) => {
   const color = getNodeColor(data.type);
-  const StatusIcon = statusIcons[data.status];
+  const StatusIcon = statusIcons[data.status] || AlertCircle;
 
   return (
     <div
@@ -94,17 +94,8 @@ const RCANode: React.FC<RCANodeProps> = ({ data }) => {
             <span
               className="text-xs px-2 py-1 rounded-full"
               style={{
-                backgroundColor: hexToRgba(
-                  data.severity === 'critical' ? '#dc2626' :
-                  data.severity === 'high' ? '#f59e0b' :
-                  data.severity === 'medium' ? '#eab308' :
-                  '#3b82f6',
-                  0.2
-                ),
-                color: data.severity === 'critical' ? '#dc2626' :
-                       data.severity === 'high' ? '#f59e0b' :
-                       data.severity === 'medium' ? '#eab308' :
-                       '#3b82f6',
+                backgroundColor: hexToRgba(getSeverityColor(data.severity), 0.2),
+                color: getSeverityColor(data.severity),
               }}
             >
               {data.severity}
@@ -116,6 +107,8 @@ const RCANode: React.FC<RCANodeProps> = ({ data }) => {
       <Handle type="source" position={Position.Bottom} />
     </div>
   );
-};
+});
+
+RCANode.displayName = 'RCANode';
 
 export default RCANode;

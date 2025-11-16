@@ -392,7 +392,8 @@ export const sendMessage = (incidentId, message) => {
   session.messages.push(userMessage, assistantMessage);
   session.updatedAt = new Date().toISOString();
 
-  return assistantMessage;
+  // Return both messages so client can stay in sync
+  return { userMessage, assistantMessage };
 };
 
 export const updateStepStatus = (incidentId, stepId, status) => {

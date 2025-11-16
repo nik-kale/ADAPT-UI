@@ -34,19 +34,26 @@ export const useInsights = (incidentId: string, enableRealtime = false) => {
   useEffect(() => {
     if (!enableRealtime || !incidentId) return;
 
+    let isMounted = true;
+
     defaultClient.connectWebSocket(
       incidentId,
       (data) => {
-        if (data.type === 'insight') {
+        // Only update state if component is still mounted
+        if (isMounted && data.type === 'insight') {
           setInsights(prev => [...prev, data.payload]);
         }
       },
       (error) => {
-        console.error('WebSocket error:', error);
+        if (isMounted) {
+          console.error('WebSocket error:', error);
+          setError('WebSocket connection error');
+        }
       }
     );
 
     return () => {
+      isMounted = false;
       defaultClient.disconnectWebSocket();
     };
   }, [incidentId, enableRealtime]);
