@@ -142,6 +142,12 @@ const RCAGraphViewerInner: React.FC<RCAGraphViewerProps> = ({
             return rcaNode ? getNodeColor(rcaNode.type) : '#64748b';
           }}
           maskColor="rgba(15, 23, 42, 0.8)"
+          onClick={(event, position) => {
+            // Navigate to clicked position on minimap
+            setCenter(position.x, position.y, { zoom: 1.5, duration: 300 });
+          }}
+          pannable
+          zoomable
         />
       </ReactFlow>
     </div>

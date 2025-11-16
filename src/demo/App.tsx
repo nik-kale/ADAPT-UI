@@ -8,7 +8,8 @@ import {
   LazyChatInterface,
   LazyInsightsPanel,
   LazyRemediationViewer,
-  LazyWrapper
+  LazyWrapper,
+  preloadComponent
 } from '@components/LazyComponents';
 
 // Use React Query hooks
@@ -88,6 +89,27 @@ function App() {
     }
   }, [graph, selectedIncident]);
 
+  // Preload components on tab hover for better UX
+  const handleTabHover = useCallback((tabId: string) => {
+    switch (tabId) {
+      case 'graph':
+        preloadComponent(LazyRCAGraphViewer);
+        break;
+      case 'timeline':
+        preloadComponent(LazyTimelineViewer);
+        break;
+      case 'chat':
+        preloadComponent(LazyChatInterface);
+        break;
+      case 'insights':
+        preloadComponent(LazyInsightsPanel);
+        break;
+      case 'remediation':
+        preloadComponent(LazyRemediationViewer);
+        break;
+    }
+  }, []);
+
   const handleCopyToClipboard = useCallback(async () => {
     const element = document.querySelector('[data-export-target="graph"]') as HTMLElement;
     if (element) {
@@ -148,6 +170,7 @@ function App() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
+                onMouseEnter={() => handleTabHover(tab.id)}
                 role="tab"
                 aria-selected={activeTab === tab.id}
                 aria-controls={`panel-${tab.id}`}

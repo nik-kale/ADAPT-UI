@@ -11,9 +11,23 @@ import {
 } from '@types/index';
 import { CACHE_TTL } from '@utils/constants';
 
+// Retry configuration
+const retryConfig = {
+  retry: (failureCount: number, error: any) => {
+    // Don't retry on 404 or 403
+    if (error?.message?.includes('404') || error?.message?.includes('403')) {
+      return false;
+    }
+    // Retry up to 3 times for other errors
+    return failureCount < 3;
+  },
+  retryDelay: (attemptIndex: number) => Math.min(1000 * 2 ** attemptIndex, 30000),
+};
+
 // Incident Queries
 export const useIncidents = () => {
   return useQuery({
+    ...retryConfig,
     queryKey: queryKeys.incidents.list(),
     queryFn: async () => {
       const response = await defaultClient.getIncidents();
@@ -23,11 +37,14 @@ export const useIncidents = () => {
       return response.data!;
     },
     staleTime: CACHE_TTL.SHORT,
+    ...retryConfig,
   });
 };
 
 export const useIncident = (id: string) => {
   return useQuery({
+    ...retryConfig,
+    ...retryConfig,
     queryKey: queryKeys.incidents.detail(id),
     queryFn: async () => {
       const response = await defaultClient.getIncident(id);
@@ -44,6 +61,7 @@ export const useIncident = (id: string) => {
 // RCA Graph Queries
 export const useRCAGraph = (incidentId: string) => {
   return useQuery({
+    ...retryConfig,
     queryKey: queryKeys.rca.graph(incidentId),
     queryFn: async () => {
       const response = await defaultClient.getRCAGraph(incidentId);
@@ -60,6 +78,7 @@ export const useRCAGraph = (incidentId: string) => {
 // Timeline Queries
 export const useTimeline = (incidentId: string) => {
   return useQuery({
+    ...retryConfig,
     queryKey: queryKeys.timeline.detail(incidentId),
     queryFn: async () => {
       const response = await defaultClient.getTimeline(incidentId);
@@ -76,6 +95,7 @@ export const useTimeline = (incidentId: string) => {
 // Chat Queries
 export const useChatSession = (incidentId: string) => {
   return useQuery({
+    ...retryConfig,
     queryKey: queryKeys.chat.session(incidentId),
     queryFn: async () => {
       const response = await defaultClient.getChatSession(incidentId);
@@ -124,6 +144,7 @@ export const useSendMessage = (incidentId: string) => {
 // Insights Queries
 export const useInsights = (incidentId: string) => {
   return useQuery({
+    ...retryConfig,
     queryKey: queryKeys.insights.stream(incidentId),
     queryFn: async () => {
       const response = await defaultClient.getInsights(incidentId);
@@ -140,6 +161,7 @@ export const useInsights = (incidentId: string) => {
 // Remediation Queries
 export const useRemediationPlan = (incidentId: string) => {
   return useQuery({
+    ...retryConfig,
     queryKey: queryKeys.remediation.plan(incidentId),
     queryFn: async () => {
       const response = await defaultClient.getRemediationPlan(incidentId);
