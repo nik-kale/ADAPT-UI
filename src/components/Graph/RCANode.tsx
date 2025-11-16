@@ -4,6 +4,7 @@ import { RCANode as RCANodeType } from '@types/index';
 import { getNodeColor, getStatusColor, getSeverityColor, hexToRgba } from '@utils/colors';
 import { AlertCircle, CheckCircle, Clock, XCircle, Loader } from 'lucide-react';
 import { getNodeAriaLabel, getNodeRole } from '@utils/accessibility';
+import { NODE_SIZES } from '@utils/constants';
 
 interface RCANodeProps {
   data: RCANodeType & { onClick?: () => void };
@@ -38,8 +39,8 @@ const RCANode: React.FC<RCANodeProps> = React.memo(({ data }) => {
       aria-label={getNodeAriaLabel(data)}
       aria-describedby={`node-desc-${data.id}`}
       style={{
-        minWidth: '200px',
-        maxWidth: '250px',
+        minWidth: `${NODE_SIZES.MEDIUM.MIN_WIDTH}px`,
+        maxWidth: `${NODE_SIZES.MEDIUM.MAX_WIDTH}px`,
       }}
     >
       <Handle type="target" position={Position.Top} aria-hidden="true" />

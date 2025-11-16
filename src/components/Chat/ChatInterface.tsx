@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChatMessage, ChatWidgetConfig } from '@types/index';
 import { formatTimestamp } from '@utils/formatters';
+import { announceToScreenReader } from '@utils/accessibility';
 import { Send, User, Bot, Sparkles } from 'lucide-react';
 import { hexToRgba } from '@utils/colors';
 
@@ -19,18 +20,35 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 }) => {
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
+  // Auto-scroll to latest message and announce to screen readers
   useEffect(() => {
     if (config.enableAutoScroll !== false) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
+
+    // Announce new assistant messages to screen readers
+    if (messages.length > 0) {
+      const latestMessage = messages[messages.length - 1];
+      if (latestMessage.role === 'assistant') {
+        announceToScreenReader(`Assistant: ${latestMessage.content}`);
+      }
+    }
   }, [messages, config.enableAutoScroll]);
+
+  // Focus input on mount and after sending message
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (input.trim() && !isLoading) {
       onSendMessage(input.trim());
       setInput('');
+      // Re-focus input after sending for better UX
+      setTimeout(() => inputRef.current?.focus(), 0);
     }
   };
 
@@ -158,12 +176,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       <div className="px-6 py-4 border-t border-adapt-border">
         <form onSubmit={handleSubmit} className="flex gap-2">
           <input
+            ref={inputRef}
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder={config.placeholder || 'Ask a question about this incident...'}
             disabled={isLoading}
             className="flex-1 bg-adapt-bg-tertiary border border-adapt-border rounded-lg px-4 py-2 text-adapt-text-primary placeholder-adapt-text-muted focus:outline-none focus:ring-2 focus:ring-adapt-primary disabled:opacity-50"
+            aria-label="Chat message input"
           />
           <button
             type="submit"

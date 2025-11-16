@@ -2,6 +2,7 @@ import React from 'react';
 import { Search, X, Filter, ChevronDown } from 'lucide-react';
 import { useGraphSearch, getFilterOptions } from '@hooks/useGraphSearch';
 import { useDebounce } from '@utils/performance';
+import { announceToScreenReader } from '@utils/accessibility';
 import { RCANode } from '@types/index';
 
 interface GraphSearchProps {
@@ -30,9 +31,15 @@ export const GraphSearch: React.FC<GraphSearchProps> = ({ nodes, onFilterChange 
     updateFilter('query', query);
   }, 300);
 
+  // Notify parent and announce to screen readers
   React.useEffect(() => {
     onFilterChange?.(highlightedNodeIds);
-  }, [highlightedNodeIds, onFilterChange]);
+
+    // Announce filter results to screen readers
+    if (hasActiveFilters) {
+      announceToScreenReader(`Found ${resultCount} matching nodes out of ${totalCount} total nodes`);
+    }
+  }, [highlightedNodeIds, onFilterChange, hasActiveFilters, resultCount, totalCount]);
 
   return (
     <div className="bg-adapt-bg-secondary rounded-lg border border-adapt-border p-4">
