@@ -210,4 +210,4 @@ const TimelineViewer: React.FC<TimelineViewerProps> = ({
   );
 };
 
-export default TimelineViewer;
+export default React.memo(TimelineViewer);

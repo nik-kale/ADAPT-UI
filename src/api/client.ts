@@ -32,6 +32,7 @@ export class AdaptAPIClient {
   private wsOnMessage: ((data: any) => void) | null = null;
   private wsOnError: ((error: Event) => void) | null = null;
   private wsIntentionallyClosed = false;
+  private wsConnectionId = 0; // Track connection versions to prevent race conditions
 
   constructor(baseUrl?: string) {
     this.baseUrl = baseUrl || config.api.baseUrl;
@@ -290,6 +291,10 @@ export class AdaptAPIClient {
       this.wsReconnectTimeout = null;
     }
 
+    // Increment connection ID to track this specific connection
+    this.wsConnectionId++;
+    const currentConnectionId = this.wsConnectionId;
+
     // Store connection parameters for reconnection
     this.wsIncidentId = incidentId;
     this.wsOnMessage = onMessage;
@@ -299,12 +304,24 @@ export class AdaptAPIClient {
     this.ws = new WebSocket(`${this.wsUrl}/ws/${incidentId}`);
 
     this.ws.onopen = () => {
-      logger.info('WebSocket connection established', { incidentId });
-      // Reset reconnection attempts on successful connection
-      this.wsReconnectAttempts = 0;
+      // Only log if this connection is still current
+      if (currentConnectionId === this.wsConnectionId) {
+        logger.info('WebSocket connection established', { incidentId, connectionId: currentConnectionId });
+        // Reset reconnection attempts on successful connection
+        this.wsReconnectAttempts = 0;
+      }
     };
 
     this.ws.onmessage = (event) => {
+      // Only process message if this connection is still current
+      if (currentConnectionId !== this.wsConnectionId) {
+        logger.debug('Ignoring message from stale WebSocket connection', {
+          currentConnectionId,
+          activeConnectionId: this.wsConnectionId
+        });
+        return;
+      }
+
       try {
         const data = JSON.parse(event.data);
         onMessage(data);
@@ -314,13 +331,26 @@ export class AdaptAPIClient {
     };
 
     this.ws.onerror = (error) => {
-      logger.error('WebSocket error', error, { incidentId });
-      onError?.(error);
+      // Only handle error if this connection is still current
+      if (currentConnectionId === this.wsConnectionId) {
+        logger.error('WebSocket error', error, { incidentId, connectionId: currentConnectionId });
+        onError?.(error);
+      }
     };
 
     this.ws.onclose = (event) => {
+      // Only handle close if this connection is still current
+      if (currentConnectionId !== this.wsConnectionId) {
+        logger.debug('Ignoring close from stale WebSocket connection', {
+          currentConnectionId,
+          activeConnectionId: this.wsConnectionId
+        });
+        return;
+      }
+
       logger.info('WebSocket connection closed', {
         incidentId,
+        connectionId: currentConnectionId,
         code: event.code,
         reason: event.reason,
         wasClean: event.wasClean,

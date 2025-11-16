@@ -305,4 +305,4 @@ const RemediationViewer: React.FC<RemediationViewerProps> = ({
   );
 };
 
-export default RemediationViewer;
+export default React.memo(RemediationViewer);

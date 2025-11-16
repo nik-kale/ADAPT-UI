@@ -1,5 +1,6 @@
 import React, { Suspense } from 'react';
 import { Loader } from 'lucide-react';
+import { lazyWithRetry } from '@utils/performance';
 
 /**
  * Loading fallback component
@@ -12,38 +13,38 @@ const LoadingFallback: React.FC<{ message?: string }> = ({ message = 'Loading...
 );
 
 /**
- * Lazy-loaded RCA Graph Viewer
+ * Lazy-loaded RCA Graph Viewer with retry logic
  */
-export const LazyRCAGraphViewer = React.lazy(
-  () => import('./RCAGraphViewer').then((module) => ({ default: module.RCAGraphViewer }))
+export const LazyRCAGraphViewer = lazyWithRetry(
+  () => import('./Graph/RCAGraphViewer')
 );
 
 /**
- * Lazy-loaded Timeline Viewer
+ * Lazy-loaded Timeline Viewer with retry logic
  */
-export const LazyTimelineViewer = React.lazy(
-  () => import('./TimelineViewer').then((module) => ({ default: module.TimelineViewer }))
+export const LazyTimelineViewer = lazyWithRetry(
+  () => import('./Timeline/TimelineViewer')
 );
 
 /**
- * Lazy-loaded Chat Interface
+ * Lazy-loaded Chat Interface with retry logic
  */
-export const LazyChatInterface = React.lazy(
-  () => import('./ChatInterface').then((module) => ({ default: module.ChatInterface }))
+export const LazyChatInterface = lazyWithRetry(
+  () => import('./Chat/ChatInterface')
 );
 
 /**
- * Lazy-loaded Insights Panel
+ * Lazy-loaded Insights Panel with retry logic
  */
-export const LazyInsightsPanel = React.lazy(
-  () => import('./InsightsPanel').then((module) => ({ default: module.InsightsPanel }))
+export const LazyInsightsPanel = lazyWithRetry(
+  () => import('./InsightsPanel/InsightsPanel')
 );
 
 /**
- * Lazy-loaded Remediation Viewer
+ * Lazy-loaded Remediation Viewer with retry logic
  */
-export const LazyRemediationViewer = React.lazy(
-  () => import('./RemediationViewer').then((module) => ({ default: module.RemediationViewer }))
+export const LazyRemediationViewer = lazyWithRetry(
+  () => import('./Remediation/RemediationViewer')
 );
 
 /**

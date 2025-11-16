@@ -142,6 +142,7 @@ export const printGraph = (element: HTMLElement): void => {
 
     const clone = element.cloneNode(true) as HTMLElement;
 
+    // Create document structure safely without XSS vulnerability
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
@@ -160,13 +161,19 @@ export const printGraph = (element: HTMLElement): void => {
             }
           </style>
         </head>
-        <body>
-          ${clone.outerHTML}
+        <body id="print-body">
         </body>
       </html>
     `);
 
     printWindow.document.close();
+
+    // Append clone safely using DOM API instead of string interpolation
+    const body = printWindow.document.getElementById('print-body');
+    if (body) {
+      body.appendChild(clone);
+    }
+
     printWindow.focus();
 
     setTimeout(() => {

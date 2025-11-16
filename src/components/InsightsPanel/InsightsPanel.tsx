@@ -155,4 +155,4 @@ const InsightsPanel: React.FC<InsightsPanelProps> = ({
   );
 };
 
-export default InsightsPanel;
+export default React.memo(InsightsPanel);

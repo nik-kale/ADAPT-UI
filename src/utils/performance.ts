@@ -7,14 +7,15 @@ import { useCallback, useEffect, useRef } from 'react';
 
 /**
  * Debounce function - delays execution until after specified wait time
+ * Returns a debounced function with a cancel method to prevent memory leaks
  */
 export function debounce<T extends (...args: any[]) => any>(
   func: T,
   wait: number
-): (...args: Parameters<T>) => void {
+): ((...args: Parameters<T>) => void) & { cancel: () => void } {
   let timeout: NodeJS.Timeout | null = null;
 
-  return function executedFunction(...args: Parameters<T>) {
+  const executedFunction = function (...args: Parameters<T>) {
     const later = () => {
       timeout = null;
       func(...args);
@@ -25,6 +26,16 @@ export function debounce<T extends (...args: any[]) => any>(
     }
     timeout = setTimeout(later, wait);
   };
+
+  // Add cancel method to clear pending timeout
+  executedFunction.cancel = () => {
+    if (timeout) {
+      clearTimeout(timeout);
+      timeout = null;
+    }
+  };
+
+  return executedFunction as typeof executedFunction & { cancel: () => void };
 }
 
 /**
@@ -46,23 +57,36 @@ export function throttle<T extends (...args: any[]) => any>(
 }
 
 /**
- * Hook for debounced callbacks
+ * Hook for debounced callbacks with proper cleanup
  */
 export function useDebounce<T extends (...args: any[]) => any>(
   callback: T,
   delay: number
 ): (...args: Parameters<T>) => void {
   const callbackRef = useRef(callback);
+  const debouncedFnRef = useRef<ReturnType<typeof debounce>>();
 
   useEffect(() => {
     callbackRef.current = callback;
   }, [callback]);
 
-  return useCallback(
-    debounce((...args: Parameters<T>) => {
+  useEffect(() => {
+    // Create debounced function
+    debouncedFnRef.current = debounce((...args: Parameters<T>) => {
       callbackRef.current(...args);
-    }, delay),
-    [delay]
+    }, delay);
+
+    // Cleanup: cancel pending timeout on unmount or delay change
+    return () => {
+      debouncedFnRef.current?.cancel();
+    };
+  }, [delay]);
+
+  return useCallback(
+    (...args: Parameters<T>) => {
+      debouncedFnRef.current?.(...args);
+    },
+    []
   );
 }
 

@@ -34,11 +34,13 @@ export class GraphWidget extends AdaptWidget {
         })
       );
     } else {
-      this.container.innerHTML = `
-        <div style="padding: 20px; color: #ef4444;">
-          Error loading graph: ${response.error?.message}
-        </div>
-      `;
+      // Create error element safely without XSS vulnerability
+      const errorDiv = document.createElement('div');
+      errorDiv.style.padding = '20px';
+      errorDiv.style.color = '#ef4444';
+      errorDiv.textContent = `Error loading graph: ${response.error?.message || 'Unknown error'}`;
+      this.container.innerHTML = ''; // Clear container
+      this.container.appendChild(errorDiv);
     }
   }
 }

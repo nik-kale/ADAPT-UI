@@ -33,14 +33,13 @@ export const useGraphSearch = (nodes: RCANode[]) => {
 
   const filteredNodes = useMemo(() => {
     return nodes.filter((node) => {
-      // Text search
+      // Text search with fuzzy matching for better UX
       if (filters.query) {
-        const query = filters.query.toLowerCase();
         const matchesQuery =
-          node.label.toLowerCase().includes(query) ||
-          node.description.toLowerCase().includes(query) ||
-          node.type.toLowerCase().includes(query) ||
-          node.id.toLowerCase().includes(query);
+          fuzzyMatch(node.label, filters.query) ||
+          fuzzyMatch(node.description, filters.query) ||
+          fuzzyMatch(node.type, filters.query) ||
+          fuzzyMatch(node.id, filters.query);
 
         if (!matchesQuery) return false;
       }

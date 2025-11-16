@@ -1,5 +1,5 @@
-import React, { useState, Suspense } from 'react';
-import { Activity, Clock, MessageSquare, Lightbulb, Wrench, Download } from 'lucide-react';
+import React, { useState, Suspense, useMemo, useCallback } from 'react';
+import { Activity, Clock, MessageSquare, Lightbulb, Wrench, Download, Copy, Printer } from 'lucide-react';
 
 // Use lazy-loaded components
 import {
@@ -27,7 +27,9 @@ import { GraphSearch } from '@components/GraphSearch';
 import {
   exportGraphAsPNG,
   exportGraphAsSVG,
-  exportGraphAsJSON
+  exportGraphAsJSON,
+  copyGraphToClipboard,
+  printGraph
 } from '@utils/graphExport';
 
 const INCIDENTS = [
@@ -56,34 +58,49 @@ function App() {
   const insights = insightStream?.insights || [];
   const isLive = insightStream?.isLive || false;
 
-  const tabs = [
+  // Memoize tabs array to prevent unnecessary re-renders
+  const tabs = useMemo(() => [
     { id: 'graph', label: 'RCA Graph', icon: Activity },
     { id: 'timeline', label: 'Timeline', icon: Clock },
     { id: 'chat', label: 'Chat', icon: MessageSquare },
     { id: 'insights', label: 'Insights', icon: Lightbulb },
     { id: 'remediation', label: 'Remediation', icon: Wrench },
-  ] as const;
+  ] as const, []);
 
-  // Export handlers
-  const handleExportPNG = async () => {
+  // Export handlers with useCallback to prevent recreation on every render
+  const handleExportPNG = useCallback(async () => {
     const element = document.querySelector('[data-export-target="graph"]') as HTMLElement;
     if (element) {
       await exportGraphAsPNG(element, `rca-graph-${selectedIncident}.png`);
     }
-  };
+  }, [selectedIncident]);
 
-  const handleExportSVG = async () => {
+  const handleExportSVG = useCallback(async () => {
     const element = document.querySelector('[data-export-target="graph"]') as HTMLElement;
     if (element) {
       await exportGraphAsSVG(element, `rca-graph-${selectedIncident}.svg`);
     }
-  };
+  }, [selectedIncident]);
 
-  const handleExportJSON = () => {
+  const handleExportJSON = useCallback(() => {
     if (graph) {
       exportGraphAsJSON(graph, `rca-graph-${selectedIncident}.json`);
     }
-  };
+  }, [graph, selectedIncident]);
+
+  const handleCopyToClipboard = useCallback(async () => {
+    const element = document.querySelector('[data-export-target="graph"]') as HTMLElement;
+    if (element) {
+      await copyGraphToClipboard(element);
+    }
+  }, []);
+
+  const handlePrint = useCallback(() => {
+    const element = document.querySelector('[data-export-target="graph"]') as HTMLElement;
+    if (element) {
+      printGraph(element);
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-adapt-bg-primary">
@@ -181,9 +198,28 @@ function App() {
                     {/* Export Buttons */}
                     <div className="flex gap-2">
                       <button
+                        onClick={handleCopyToClipboard}
+                        className="flex items-center gap-2 px-3 py-2 bg-adapt-bg-tertiary hover:bg-adapt-bg-primary border border-adapt-border rounded-lg text-sm text-adapt-text-primary transition-colors"
+                        aria-label="Copy graph to clipboard"
+                        title="Copy graph as image to clipboard"
+                      >
+                        <Copy size={16} />
+                        Copy
+                      </button>
+                      <button
+                        onClick={handlePrint}
+                        className="flex items-center gap-2 px-3 py-2 bg-adapt-bg-tertiary hover:bg-adapt-bg-primary border border-adapt-border rounded-lg text-sm text-adapt-text-primary transition-colors"
+                        aria-label="Print graph"
+                        title="Print graph"
+                      >
+                        <Printer size={16} />
+                        Print
+                      </button>
+                      <button
                         onClick={handleExportPNG}
                         className="flex items-center gap-2 px-3 py-2 bg-adapt-bg-tertiary hover:bg-adapt-bg-primary border border-adapt-border rounded-lg text-sm text-adapt-text-primary transition-colors"
                         aria-label="Export as PNG"
+                        title="Download as PNG image"
                       >
                         <Download size={16} />
                         PNG
@@ -192,6 +228,7 @@ function App() {
                         onClick={handleExportSVG}
                         className="flex items-center gap-2 px-3 py-2 bg-adapt-bg-tertiary hover:bg-adapt-bg-primary border border-adapt-border rounded-lg text-sm text-adapt-text-primary transition-colors"
                         aria-label="Export as SVG"
+                        title="Download as SVG vector image"
                       >
                         <Download size={16} />
                         SVG
@@ -200,6 +237,7 @@ function App() {
                         onClick={handleExportJSON}
                         className="flex items-center gap-2 px-3 py-2 bg-adapt-bg-tertiary hover:bg-adapt-bg-primary border border-adapt-border rounded-lg text-sm text-adapt-text-primary transition-colors"
                         aria-label="Export as JSON"
+                        title="Download graph data as JSON"
                       >
                         <Download size={16} />
                         JSON
