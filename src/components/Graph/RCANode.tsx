@@ -3,6 +3,7 @@ import { Handle, Position } from 'reactflow';
 import { RCANode as RCANodeType } from '@types/index';
 import { getNodeColor, getStatusColor, getSeverityColor, hexToRgba } from '@utils/colors';
 import { AlertCircle, CheckCircle, Clock, XCircle, Loader } from 'lucide-react';
+import { getNodeAriaLabel, getNodeRole } from '@utils/accessibility';
 
 interface RCANodeProps {
   data: RCANodeType & { onClick?: () => void };
@@ -20,16 +21,28 @@ const RCANode: React.FC<RCANodeProps> = React.memo(({ data }) => {
   const color = getNodeColor(data.type);
   const StatusIcon = statusIcons[data.status] || AlertCircle;
 
+  const handleKeyPress = (event: React.KeyboardEvent) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      data.onClick?.();
+    }
+  };
+
   return (
     <div
-      className="relative cursor-pointer transition-all hover:scale-105"
+      className="relative cursor-pointer transition-all hover:scale-105 focus:outline-none focus:ring-2 focus:ring-adapt-primary focus:ring-offset-2"
       onClick={data.onClick}
+      onKeyDown={handleKeyPress}
+      role="button"
+      tabIndex={0}
+      aria-label={getNodeAriaLabel(data)}
+      aria-describedby={`node-desc-${data.id}`}
       style={{
         minWidth: '200px',
         maxWidth: '250px',
       }}
     >
-      <Handle type="target" position={Position.Top} />
+      <Handle type="target" position={Position.Top} aria-hidden="true" />
 
       <div
         className="rounded-lg shadow-lg border-2 p-4"
@@ -47,6 +60,8 @@ const RCANode: React.FC<RCANodeProps> = React.memo(({ data }) => {
               backgroundColor: hexToRgba(color, 0.2),
               color: color,
             }}
+            role="img"
+            aria-label={`${getNodeRole(data.type)} type badge`}
           >
             {data.type}
           </div>
@@ -54,6 +69,7 @@ const RCANode: React.FC<RCANodeProps> = React.memo(({ data }) => {
             size={16}
             style={{ color: getStatusColor(data.status) }}
             className={data.status === 'in_progress' ? 'animate-spin' : ''}
+            aria-label={`Status: ${data.status}`}
           />
         </div>
 
@@ -63,13 +79,16 @@ const RCANode: React.FC<RCANodeProps> = React.memo(({ data }) => {
         </div>
 
         {/* Description */}
-        <div className="text-adapt-text-secondary text-sm line-clamp-2">
+        <div
+          id={`node-desc-${data.id}`}
+          className="text-adapt-text-secondary text-sm line-clamp-2"
+        >
           {data.description}
         </div>
 
         {/* Confidence */}
         {data.confidence !== undefined && (
-          <div className="mt-3">
+          <div className="mt-3" role="progressbar" aria-valuenow={data.confidence} aria-valuemin={0} aria-valuemax={100}>
             <div className="flex items-center justify-between text-xs mb-1">
               <span className="text-adapt-text-muted">Confidence</span>
               <span className="text-adapt-text-primary font-semibold">
@@ -83,6 +102,7 @@ const RCANode: React.FC<RCANodeProps> = React.memo(({ data }) => {
                   width: `${data.confidence}%`,
                   backgroundColor: color,
                 }}
+                aria-hidden="true"
               />
             </div>
           </div>
@@ -97,6 +117,8 @@ const RCANode: React.FC<RCANodeProps> = React.memo(({ data }) => {
                 backgroundColor: hexToRgba(getSeverityColor(data.severity), 0.2),
                 color: getSeverityColor(data.severity),
               }}
+              role="status"
+              aria-label={`Severity level: ${data.severity}`}
             >
               {data.severity}
             </span>
@@ -104,7 +126,7 @@ const RCANode: React.FC<RCANodeProps> = React.memo(({ data }) => {
         )}
       </div>
 
-      <Handle type="source" position={Position.Bottom} />
+      <Handle type="source" position={Position.Bottom} aria-hidden="true" />
     </div>
   );
 });
