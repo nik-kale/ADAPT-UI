@@ -1,15 +1,34 @@
-import React, { useState } from 'react';
-import { RCAGraphViewer } from '@components/Graph';
-import { TimelineViewer } from '@components/Timeline';
-import { ChatInterface } from '@components/Chat';
-import { InsightsPanel } from '@components/InsightsPanel';
-import { RemediationViewer } from '@components/Remediation';
-import { useRCAGraph } from '@hooks/useRCAGraph';
-import { useTimeline } from '@hooks/useTimeline';
-import { useChat } from '@hooks/useChat';
-import { useInsights } from '@hooks/useInsights';
-import { useRemediation } from '@hooks/useRemediation';
-import { Activity, Clock, MessageSquare, Lightbulb, Wrench } from 'lucide-react';
+import React, { useState, Suspense } from 'react';
+import { Activity, Clock, MessageSquare, Lightbulb, Wrench, Download } from 'lucide-react';
+
+// Use lazy-loaded components
+import {
+  LazyRCAGraphViewer,
+  LazyTimelineViewer,
+  LazyChatInterface,
+  LazyInsightsPanel,
+  LazyRemediationViewer,
+  LazyWrapper
+} from '@components/LazyComponents';
+
+// Use React Query hooks
+import {
+  useRCAGraph,
+  useTimeline,
+  useChatSession,
+  useSendMessage,
+  useInsights,
+  useRemediationPlan,
+  useUpdateStepStatus
+} from '@api/queries';
+
+// Import search and export features
+import { GraphSearch } from '@components/GraphSearch';
+import {
+  exportGraphAsPNG,
+  exportGraphAsSVG,
+  exportGraphAsJSON
+} from '@utils/graphExport';
 
 const INCIDENTS = [
   {
@@ -22,12 +41,20 @@ const INCIDENTS = [
 function App() {
   const [selectedIncident, setSelectedIncident] = useState('inc-001');
   const [activeTab, setActiveTab] = useState<'graph' | 'timeline' | 'chat' | 'insights' | 'remediation'>('graph');
+  const [highlightedNodeIds, setHighlightedNodeIds] = useState<Set<string>>(new Set());
 
-  const { graph, loading: graphLoading } = useRCAGraph(selectedIncident);
-  const { timeline, loading: timelineLoading } = useTimeline(selectedIncident);
-  const { messages, sending, sendMessage } = useChat(selectedIncident);
-  const { insights, isLive, loading: insightsLoading } = useInsights(selectedIncident, true);
-  const { plan, updateStepStatus, loading: remediationLoading } = useRemediation(selectedIncident);
+  // Use React Query hooks with proper return values
+  const { data: graph, isLoading: graphLoading } = useRCAGraph(selectedIncident);
+  const { data: timeline, isLoading: timelineLoading } = useTimeline(selectedIncident);
+  const { data: chatSession } = useChatSession(selectedIncident);
+  const { mutate: sendMessage, isPending: sending } = useSendMessage(selectedIncident);
+  const { data: insightStream, isLoading: insightsLoading } = useInsights(selectedIncident);
+  const { data: plan, isLoading: remediationLoading } = useRemediationPlan(selectedIncident);
+  const { mutate: updateStepStatus } = useUpdateStepStatus(selectedIncident);
+
+  const messages = chatSession?.messages || [];
+  const insights = insightStream?.insights || [];
+  const isLive = insightStream?.isLive || false;
 
   const tabs = [
     { id: 'graph', label: 'RCA Graph', icon: Activity },
@@ -36,6 +63,27 @@ function App() {
     { id: 'insights', label: 'Insights', icon: Lightbulb },
     { id: 'remediation', label: 'Remediation', icon: Wrench },
   ] as const;
+
+  // Export handlers
+  const handleExportPNG = async () => {
+    const element = document.querySelector('[data-export-target="graph"]') as HTMLElement;
+    if (element) {
+      await exportGraphAsPNG(element, `rca-graph-${selectedIncident}.png`);
+    }
+  };
+
+  const handleExportSVG = async () => {
+    const element = document.querySelector('[data-export-target="graph"]') as HTMLElement;
+    if (element) {
+      await exportGraphAsSVG(element, `rca-graph-${selectedIncident}.svg`);
+    }
+  };
+
+  const handleExportJSON = () => {
+    if (graph) {
+      exportGraphAsJSON(graph, `rca-graph-${selectedIncident}.json`);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-adapt-bg-primary">
@@ -61,6 +109,7 @@ function App() {
                 value={selectedIncident}
                 onChange={(e) => setSelectedIncident(e.target.value)}
                 className="bg-adapt-bg-tertiary border border-adapt-border rounded-lg px-4 py-2 text-adapt-text-primary"
+                aria-label="Select incident"
               >
                 {INCIDENTS.map((incident) => (
                   <option key={incident.id} value={incident.id}>
@@ -75,20 +124,23 @@ function App() {
 
       {/* Tabs */}
       <div className="max-w-[1800px] mx-auto px-6">
-        <div className="flex gap-2 pt-6 border-b border-adapt-border">
+        <div className="flex gap-2 pt-6 border-b border-adapt-border" role="tablist">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
+                role="tab"
+                aria-selected={activeTab === tab.id}
+                aria-controls={`panel-${tab.id}`}
                 className={`flex items-center gap-2 px-4 py-3 rounded-t-lg transition-colors ${
                   activeTab === tab.id
                     ? 'bg-adapt-bg-secondary text-adapt-primary border-t-2 border-x-2 border-adapt-primary'
                     : 'text-adapt-text-secondary hover:text-adapt-text-primary hover:bg-adapt-bg-secondary/50'
                 }`}
               >
-                <Icon size={18} />
+                <Icon size={18} aria-hidden="true" />
                 {tab.label}
               </button>
             );
@@ -99,7 +151,7 @@ function App() {
       {/* Content */}
       <main className="max-w-[1800px] mx-auto px-6 py-6">
         {activeTab === 'graph' && (
-          <div className="space-y-4">
+          <div className="space-y-4" role="tabpanel" id="panel-graph">
             {graphLoading ? (
               <div className="flex items-center justify-center h-[600px] bg-adapt-bg-secondary rounded-lg">
                 <div className="text-center">
@@ -109,21 +161,67 @@ function App() {
               </div>
             ) : graph ? (
               <>
+                {/* Graph Header with Export Buttons */}
                 <div className="bg-adapt-bg-secondary rounded-lg border border-adapt-border p-4">
-                  <h2 className="text-xl font-semibold text-adapt-text-primary mb-2">
-                    {graph.metadata.title}
-                  </h2>
-                  <div className="flex items-center gap-4 text-sm text-adapt-text-secondary">
-                    <span>Status: <span className="text-adapt-primary font-semibold">{graph.metadata.status}</span></span>
-                    <span>Nodes: {graph.nodes.length}</span>
-                    <span>Edges: {graph.edges.length}</span>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-xl font-semibold text-adapt-text-primary mb-2">
+                        {graph.metadata.title}
+                      </h2>
+                      <div className="flex items-center gap-4 text-sm text-adapt-text-secondary">
+                        <span>Status: <span className="text-adapt-primary font-semibold">{graph.metadata.status}</span></span>
+                        <span>Nodes: {graph.nodes.length}</span>
+                        <span>Edges: {graph.edges.length}</span>
+                        {highlightedNodeIds.size > 0 && (
+                          <span>Filtered: {highlightedNodeIds.size}</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Export Buttons */}
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleExportPNG}
+                        className="flex items-center gap-2 px-3 py-2 bg-adapt-bg-tertiary hover:bg-adapt-bg-primary border border-adapt-border rounded-lg text-sm text-adapt-text-primary transition-colors"
+                        aria-label="Export as PNG"
+                      >
+                        <Download size={16} />
+                        PNG
+                      </button>
+                      <button
+                        onClick={handleExportSVG}
+                        className="flex items-center gap-2 px-3 py-2 bg-adapt-bg-tertiary hover:bg-adapt-bg-primary border border-adapt-border rounded-lg text-sm text-adapt-text-primary transition-colors"
+                        aria-label="Export as SVG"
+                      >
+                        <Download size={16} />
+                        SVG
+                      </button>
+                      <button
+                        onClick={handleExportJSON}
+                        className="flex items-center gap-2 px-3 py-2 bg-adapt-bg-tertiary hover:bg-adapt-bg-primary border border-adapt-border rounded-lg text-sm text-adapt-text-primary transition-colors"
+                        aria-label="Export as JSON"
+                      >
+                        <Download size={16} />
+                        JSON
+                      </button>
+                    </div>
                   </div>
                 </div>
-                <RCAGraphViewer
-                  graph={graph}
-                  config={{ height: '700px' }}
-                  onNodeClick={(nodeId) => console.log('Node clicked:', nodeId)}
-                />
+
+                {/* Search Component */}
+                <GraphSearch nodes={graph.nodes} onFilterChange={setHighlightedNodeIds} />
+
+                {/* Graph Viewer with Export Target */}
+                <div data-export-target="graph">
+                  <LazyWrapper name="RCA Graph">
+                    <LazyRCAGraphViewer
+                      graph={graph}
+                      config={{ height: '700px' }}
+                      onNodeClick={(nodeId) => console.log('Node clicked:', nodeId)}
+                      highlightedNodes={highlightedNodeIds}
+                    />
+                  </LazyWrapper>
+                </div>
               </>
             ) : (
               <div className="text-center py-12 text-adapt-text-muted">
@@ -134,7 +232,7 @@ function App() {
         )}
 
         {activeTab === 'timeline' && (
-          <div>
+          <div role="tabpanel" id="panel-timeline">
             {timelineLoading ? (
               <div className="flex items-center justify-center h-[600px] bg-adapt-bg-secondary rounded-lg">
                 <div className="text-center">
@@ -143,11 +241,13 @@ function App() {
                 </div>
               </div>
             ) : timeline ? (
-              <TimelineViewer
-                timeline={timeline}
-                config={{ enableFilters: true }}
-                onEventClick={(event) => console.log('Event clicked:', event)}
-              />
+              <LazyWrapper name="Timeline">
+                <LazyTimelineViewer
+                  timeline={timeline}
+                  config={{ enableFilters: true }}
+                  onEventClick={(event) => console.log('Event clicked:', event)}
+                />
+              </LazyWrapper>
             ) : (
               <div className="text-center py-12 text-adapt-text-muted">
                 No timeline data available
@@ -157,18 +257,20 @@ function App() {
         )}
 
         {activeTab === 'chat' && (
-          <div className="max-w-4xl mx-auto">
-            <ChatInterface
-              messages={messages}
-              onSendMessage={sendMessage}
-              isLoading={sending}
-              config={{ showTimestamps: true }}
-            />
+          <div className="max-w-4xl mx-auto" role="tabpanel" id="panel-chat">
+            <LazyWrapper name="Chat Interface">
+              <LazyChatInterface
+                messages={messages}
+                onSendMessage={(message) => sendMessage(message)}
+                isLoading={sending}
+                config={{ showTimestamps: true }}
+              />
+            </LazyWrapper>
           </div>
         )}
 
         {activeTab === 'insights' && (
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-4xl mx-auto" role="tabpanel" id="panel-insights">
             {insightsLoading ? (
               <div className="flex items-center justify-center h-[600px] bg-adapt-bg-secondary rounded-lg">
                 <div className="text-center">
@@ -177,13 +279,15 @@ function App() {
                 </div>
               </div>
             ) : (
-              <InsightsPanel insights={insights} isLive={isLive} />
+              <LazyWrapper name="Insights Panel">
+                <LazyInsightsPanel insights={insights} isLive={isLive} />
+              </LazyWrapper>
             )}
           </div>
         )}
 
         {activeTab === 'remediation' && (
-          <div>
+          <div role="tabpanel" id="panel-remediation">
             {remediationLoading ? (
               <div className="flex items-center justify-center h-[600px] bg-adapt-bg-secondary rounded-lg">
                 <div className="text-center">
@@ -192,10 +296,14 @@ function App() {
                 </div>
               </div>
             ) : plan ? (
-              <RemediationViewer
-                plan={plan}
-                onStepStatusChange={updateStepStatus}
-              />
+              <LazyWrapper name="Remediation Viewer">
+                <LazyRemediationViewer
+                  plan={plan}
+                  onStepStatusChange={(stepId, status) =>
+                    updateStepStatus({ stepId, status })
+                  }
+                />
+              </LazyWrapper>
             ) : (
               <div className="text-center py-12 text-adapt-text-muted">
                 No remediation plan available
@@ -210,7 +318,7 @@ function App() {
         <div className="text-center text-sm text-adapt-text-muted">
           <p>ADAPT-UI: Agentic RCA Visualization & AI Assistant Toolkit</p>
           <p className="mt-2">
-            Built with React, TypeScript, Tailwind CSS, and ReactFlow
+            Built with React, TypeScript, Tailwind CSS, ReactFlow & React Query
           </p>
         </div>
       </footer>

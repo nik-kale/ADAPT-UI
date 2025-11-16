@@ -1,6 +1,7 @@
 import React from 'react';
 import { Search, X, Filter, ChevronDown } from 'lucide-react';
 import { useGraphSearch, getFilterOptions } from '@hooks/useGraphSearch';
+import { useDebounce } from '@utils/performance';
 import { RCANode } from '@types/index';
 
 interface GraphSearchProps {
@@ -9,6 +10,8 @@ interface GraphSearchProps {
 }
 
 export const GraphSearch: React.FC<GraphSearchProps> = ({ nodes, onFilterChange }) => {
+  const [searchInput, setSearchInput] = React.useState('');
+
   const {
     filters,
     updateFilter,
@@ -22,6 +25,11 @@ export const GraphSearch: React.FC<GraphSearchProps> = ({ nodes, onFilterChange 
   const [showFilters, setShowFilters] = React.useState(false);
   const filterOptions = React.useMemo(() => getFilterOptions(nodes), [nodes]);
 
+  // Debounced search update
+  const debouncedUpdateFilter = useDebounce((query: string) => {
+    updateFilter('query', query);
+  }, 300);
+
   React.useEffect(() => {
     onFilterChange?.(highlightedNodeIds);
   }, [highlightedNodeIds, onFilterChange]);
@@ -34,14 +42,20 @@ export const GraphSearch: React.FC<GraphSearchProps> = ({ nodes, onFilterChange 
         <input
           type="text"
           placeholder="Search nodes..."
-          value={filters.query}
-          onChange={(e) => updateFilter('query', e.target.value)}
+          value={searchInput}
+          onChange={(e) => {
+            setSearchInput(e.target.value);
+            debouncedUpdateFilter(e.target.value);
+          }}
           className="w-full pl-10 pr-10 py-2 bg-adapt-bg-tertiary border border-adapt-border rounded-lg text-adapt-text-primary placeholder-adapt-text-muted focus:outline-none focus:ring-2 focus:ring-adapt-primary"
           aria-label="Search graph nodes"
         />
-        {filters.query && (
+        {searchInput && (
           <button
-            onClick={() => updateFilter('query', '')}
+            onClick={() => {
+              setSearchInput('');
+              updateFilter('query', '');
+            }}
             className="absolute right-3 top-1/2 transform -translate-y-1/2 text-adapt-text-muted hover:text-adapt-text-primary"
             aria-label="Clear search"
           >

@@ -1,19 +1,27 @@
 // Export all components
 export * from './components';
 
-// Export hooks
+// Export advanced components
+export { ErrorBoundary } from './components/ErrorBoundary';
+export { GraphSearch } from './components/GraphSearch';
+export * from './components/LazyComponents';
+
+// Export hooks (includes React Query hooks)
 export * from './hooks';
 
 // Export types
 export * from './types';
 
-// Export API client
+// Export API client and React Query infrastructure
 export { AdaptAPIClient, defaultClient } from './api/client';
+export * from './api/queries';
+export { queryClient, queryKeys } from './api/queryClient';
 
 // Export widgets
 export * from './widgets';
 
-// Export utilities
-export * from './utils/colors';
-export * from './utils/formatters';
-export * from './utils/graphLayout';
+// Export all utilities (barrel export)
+export * from './utils';
+
+// Export configuration
+export { default as config } from './config/env';
