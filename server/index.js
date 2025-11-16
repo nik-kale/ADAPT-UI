@@ -33,6 +33,10 @@ app.use(express.json());
 // WebSocket handling
 const clients = new Map();
 
+// Heartbeat configuration
+const HEARTBEAT_INTERVAL = 30000; // 30 seconds
+const HEARTBEAT_TIMEOUT = 35000; // 35 seconds
+
 wss.on('connection', (ws, req) => {
   // Proper URL parsing to extract incident ID
   const url = new URL(req.url, `http://${req.headers.host}`);
@@ -46,6 +50,9 @@ wss.on('connection', (ws, req) => {
     return;
   }
 
+  // Mark connection as alive
+  ws.isAlive = true;
+
   clients.set(incidentId, ws);
 
   // Send connection confirmation
@@ -54,6 +61,20 @@ wss.on('connection', (ws, req) => {
     incidentId,
     timestamp: new Date().toISOString(),
   }));
+
+  // Heartbeat: Send ping every 30 seconds
+  const heartbeatInterval = setInterval(() => {
+    if (ws.readyState === ws.OPEN) {
+      ws.ping();
+    } else {
+      clearInterval(heartbeatInterval);
+    }
+  }, HEARTBEAT_INTERVAL);
+
+  // Handle pong response
+  ws.on('pong', () => {
+    ws.isAlive = true;
+  });
 
   // Simulate live insights
   const interval = setInterval(() => {
@@ -80,10 +101,24 @@ wss.on('connection', (ws, req) => {
 
   ws.on('close', () => {
     clearInterval(interval);
+    clearInterval(heartbeatInterval);
     clients.delete(incidentId);
     console.log(`WebSocket client disconnected for incident: ${incidentId}`);
   });
 });
+
+// Periodic heartbeat checker: Terminate dead connections
+setInterval(() => {
+  wss.clients.forEach((ws) => {
+    if (!ws.isAlive) {
+      console.log('Terminating dead WebSocket connection');
+      return ws.terminate();
+    }
+
+    ws.isAlive = false;
+    ws.ping();
+  });
+}, HEARTBEAT_TIMEOUT);
 
 // API Routes
 

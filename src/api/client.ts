@@ -22,6 +22,20 @@ import { logger } from '@utils/logger';
 import { API_CONFIG, WEBSOCKET_CONFIG } from '@utils/constants';
 import config from '@config/env';
 
+// WebSocket message type
+interface WebSocketMessage {
+  type: string;
+  payload?: unknown;
+  timestamp?: string;
+}
+
+// API Error type
+interface APIError {
+  message: string;
+  code?: string;
+  details?: unknown;
+}
+
 export class AdaptAPIClient {
   private baseUrl: string;
   private wsUrl: string;
@@ -29,7 +43,7 @@ export class AdaptAPIClient {
   private wsReconnectAttempts = 0;
   private wsReconnectTimeout: NodeJS.Timeout | null = null;
   private wsIncidentId: string | null = null;
-  private wsOnMessage: ((data: any) => void) | null = null;
+  private wsOnMessage: ((data: WebSocketMessage) => void) | null = null;
   private wsOnError: ((error: Event) => void) | null = null;
   private wsIntentionallyClosed = false;
   private wsConnectionId = 0; // Track connection versions to prevent race conditions
@@ -52,7 +66,7 @@ export class AdaptAPIClient {
     return delay + Math.random() * 1000;
   }
 
-  private shouldRetry(error: any, attempt: number): boolean {
+  private shouldRetry(error: APIError | Error, attempt: number): boolean {
     if (attempt >= API_CONFIG.RETRY_ATTEMPTS) {
       return false;
     }
@@ -275,7 +289,7 @@ export class AdaptAPIClient {
 
   connectWebSocket(
     incidentId: string,
-    onMessage: (data: any) => void,
+    onMessage: (data: WebSocketMessage) => void,
     onError?: (error: Event) => void
   ): void {
     // Close existing connection to prevent memory leaks
