@@ -1,24 +1,65 @@
-# ADAPT-UI: Agentic RCA Visualization & AI Assistant Toolkit
+# ADAPT-UI: Enterprise RCA Platform with AI-Powered Incident Management
 
-> A comprehensive front-end toolkit for integrating agentic AI-driven root-cause analysis (RCA) into product surfaces, dashboards, and support workflows.
+> A comprehensive enterprise-grade platform for AI-driven root-cause analysis, incident management, collaboration, automation, and analytics.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.2-blue)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-18.2-blue)](https://reactjs.org/)
+[![Version](https://img.shields.io/badge/Version-5.0-green)](https://github.com/adapt-ui/releases)
 
 ## 📖 Overview
 
-ADAPT-UI provides modular, production-ready UI components for visualizing and interacting with AI-driven root-cause analysis. The toolkit enables teams to create rich, explainable diagnostics interfaces that can be embedded into portals, dashboards, or in-product overlays.
+ADAPT-UI is an enterprise-grade platform that combines AI-driven root-cause analysis with comprehensive incident management, team collaboration, intelligent automation, and advanced analytics. The platform provides everything needed to detect, diagnose, remediate, and prevent incidents at scale.
 
-### Key Features
+### 🌟 Platform Capabilities
 
-- **🔍 RCA Graph Visualization** - Interactive causal graphs showing symptoms, hypotheses, tests, findings, and remediation paths
-- **⏱️ Event Timeline** - Correlated anomalies, alerts, and changes with filtering capabilities
-- **💬 AI Assistant Chat** - Natural language interface for diagnostic conversations
-- **💡 Live Insights Panel** - Real-time agent outputs and analysis progress
-- **🔧 Remediation Viewer** - Step-by-step remediation plans with execution tracking
+**Core RCA Features (v1.0)**
+- **🔍 Interactive RCA Graphs** - Causal analysis with automatic layout, pan/zoom, minimap navigation
+- **⏱️ Smart Timeline** - Correlated anomalies, alerts, changes with advanced filtering
+- **💬 AI Chat Interface** - Natural language diagnostic conversations with context awareness
+- **💡 Real-time Insights** - Live agent analysis with virtual scrolling for performance
+- **🔧 Remediation Plans** - Step-by-step remediation with execution tracking
 - **🎨 Embeddable Widgets** - Drop-in components for any web application
-- **📊 Synthetic Demo Data** - Complete example flows without backend dependencies
+- **♿ Accessibility** - WCAG compliant with keyboard navigation, screen reader support
+- **🔄 Undo/Redo** - History management for graph and workflow operations
+- **🔍 Fuzzy Search** - Forgiving search across all entities
+- **📱 Touch Support** - Full gesture support for mobile/tablet devices
+- **🖨️ Export** - Copy, print, and export capabilities
+
+**Collaboration Features (v2.0)**
+- **💬 Threaded Comments** - Rich discussions on any incident component (nodes, edges, insights)
+- **📝 Annotations** - Collaborative notes and highlights
+- **👥 Real-time Presence** - See who's viewing and working on incidents
+- **📋 Activity Feed** - Track all team actions and updates
+- **🎯 Mentions** - Tag team members in discussions
+- **👍 Reactions** - Quick emoji responses to comments
+- **✅ Resolve Threads** - Mark discussions as resolved
+
+**AI & Machine Learning (v3.0)**
+- **🤖 AI Incident Summaries** - Automated narrative generation from graph analysis
+- **📊 Anomaly Detection** - Multi-dimensional analysis (timing, structural, metric, pattern)
+- **🔄 Pattern Recognition** - Identify recurring failures, cascades, and bottlenecks
+- **📈 Predictive Analytics** - Correlation patterns for proactive prevention
+- **🧠 Historical Learning** - Learn from past incidents to improve future diagnosis
+
+**Automation & Integrations (v4.0)**
+- **⚙️ Runbook Engine** - Automated remediation with conditional logic
+- **🔗 Webhook System** - Event-driven integrations with retry logic
+- **📱 Pre-built Integrations** - Slack, Microsoft Teams, JIRA, PagerDuty, ServiceNow
+- **📊 MTTR Analytics** - Comprehensive metrics (MTTD, MTTA, MTTR, MTTC, MTTR Repair)
+- **📈 Trend Analysis** - Daily, weekly, monthly incident patterns
+- **🎯 SLA Tracking** - Compliance monitoring and reporting
+- **📉 Top Issues** - Recurring pattern identification
+
+**Enterprise Features (v5.0)**
+- **🔐 Role-Based Access Control** - Granular permissions with 6+ system roles
+- **📝 Audit Logging** - Comprehensive compliance trails with 50+ event types
+- **📊 Advanced Reporting** - Executive summaries, team performance, security audits
+- **🏢 Multi-Tenancy** - Complete tenant isolation with resource quotas
+- **💰 Billing System** - Usage tracking, overage charges, plan management
+- **👤 User Management** - Teams, invitations, SSO/SAML support
+- **🔍 Security Monitoring** - Suspicious activity detection and alerting
+- **📄 Custom Reports** - Scheduled reports in PDF, HTML, CSV, JSON, XLSX
 
 ## 🚀 Quick Start
 
@@ -64,11 +105,12 @@ npm run dev:full
 
 Visit `http://localhost:5173` to see the interactive demo.
 
-## 📦 Components
+## 📦 Components & Services
 
-### RCAGraphViewer
+### Core Visualization Components
 
-Visualize causal analysis graphs with automatic layout and interactive nodes.
+#### RCAGraphViewer
+Interactive causal analysis visualization with pan/zoom, minimap, keyboard navigation.
 
 ```tsx
 import { RCAGraphViewer } from '@adapt/ui-toolkit';
@@ -79,14 +121,14 @@ import { RCAGraphViewer } from '@adapt/ui-toolkit';
     layout: 'hierarchical',
     height: '600px',
     enableZoom: true,
+    showMinimap: true,
   }}
   onNodeClick={(nodeId) => handleNodeClick(nodeId)}
 />
 ```
 
-### TimelineViewer
-
-Display correlated events, anomalies, and changes in chronological order.
+#### TimelineViewer
+Chronological event display with filtering, search, and accessibility features.
 
 ```tsx
 import { TimelineViewer } from '@adapt/ui-toolkit';
@@ -101,9 +143,8 @@ import { TimelineViewer } from '@adapt/ui-toolkit';
 />
 ```
 
-### ChatInterface
-
-AI-powered diagnostic assistant interface.
+#### ChatInterface
+AI-powered diagnostic assistant with context-aware responses.
 
 ```tsx
 import { ChatInterface } from '@adapt/ui-toolkit';
@@ -118,9 +159,8 @@ import { ChatInterface } from '@adapt/ui-toolkit';
 />
 ```
 
-### InsightsPanel
-
-Live feed of agent analysis and discoveries.
+#### InsightsPanel
+Real-time agent analysis feed with virtual scrolling for performance.
 
 ```tsx
 import { InsightsPanel } from '@adapt/ui-toolkit';
@@ -132,9 +172,8 @@ import { InsightsPanel } from '@adapt/ui-toolkit';
 />
 ```
 
-### RemediationViewer
-
-Step-by-step remediation plan with execution tracking.
+#### RemediationViewer
+Step-by-step remediation tracking with status updates.
 
 ```tsx
 import { RemediationViewer } from '@adapt/ui-toolkit';
@@ -143,6 +182,225 @@ import { RemediationViewer } from '@adapt/ui-toolkit';
   plan={remediationPlan}
   onStepStatusChange={(stepId, status) => updateStep(stepId, status)}
 />
+```
+
+### Collaboration Components (v2.0)
+
+#### CommentThread
+Threaded discussions with replies, reactions, and resolution.
+
+```tsx
+import { CommentThread } from '@adapt/ui-toolkit';
+
+<CommentThread
+  targetType="node"
+  targetId="node-123"
+  currentUserId="user-1"
+  currentUserName="Alice"
+/>
+```
+
+#### PresenceIndicator
+Real-time user presence tracking.
+
+```tsx
+import { PresenceIndicator } from '@adapt/ui-toolkit';
+
+<PresenceIndicator
+  currentUserId="user-1"
+  currentUserName="Alice"
+  location="incident-detail"
+/>
+```
+
+#### ActivityFeed
+Recent collaboration activities and events.
+
+```tsx
+import { ActivityFeed } from '@adapt/ui-toolkit';
+
+<ActivityFeed limit={20} />
+```
+
+### Analytics Components (v4.0)
+
+#### MTTRDashboard
+Comprehensive incident analytics and metrics visualization.
+
+```tsx
+import { MTTRDashboard } from '@adapt/ui-toolkit';
+
+<MTTRDashboard />
+```
+
+### Enterprise Services (v3.0-v5.0)
+
+#### AIService
+AI-powered analysis and pattern recognition.
+
+```tsx
+import { AIService } from '@adapt/ui-toolkit';
+
+// Generate incident summary
+const summary = AIService.generateIncidentSummary(graph, timeline, insights);
+
+// Detect anomalies
+const anomalies = AIService.detectAnomalies(graph, timeline, historicalData);
+
+// Recognize patterns
+const patterns = AIService.recognizePatterns(currentGraph, historicalGraphs);
+```
+
+#### RunbookService
+Automated remediation execution engine.
+
+```tsx
+import { RunbookService, DefaultRunbooks } from '@adapt/ui-toolkit';
+
+// Execute a runbook
+const execution = await RunbookService.executeRunbook(
+  'runbook-restart-service',
+  'incident-123',
+  'user-1',
+  { serviceName: 'api-gateway' }
+);
+
+// Create custom runbook
+const runbook = RunbookService.createRunbook({
+  name: 'Scale Up Service',
+  steps: [/* ... */],
+});
+```
+
+#### WebhookService
+Event-driven integration system.
+
+```tsx
+import { WebhookService, WebhookTemplates } from '@adapt/ui-toolkit';
+
+// Register webhook for Slack
+const webhook = WebhookService.registerWebhook({
+  name: 'Slack Notifications',
+  url: 'https://hooks.slack.com/services/...',
+  events: ['incident.created', 'incident.resolved'],
+  ...WebhookTemplates.slack,
+});
+
+// Trigger event
+await WebhookService.triggerEvent('incident.created', incidentData);
+```
+
+#### AnalyticsService
+Incident metrics and MTTR tracking.
+
+```tsx
+import { AnalyticsService } from '@adapt/ui-toolkit';
+
+// Get comprehensive statistics
+const stats = AnalyticsService.getStatistics({ start, end });
+
+// Calculate MTTR metrics
+const mttr = AnalyticsService.calculateMTTR(incidents);
+
+// Get trends
+const trends = AnalyticsService.getTrends(30);
+
+// Identify top issues
+const topIssues = AnalyticsService.getTopIssues(10);
+```
+
+#### RBACService
+Role-based access control.
+
+```tsx
+import { RBACService } from '@adapt/ui-toolkit';
+
+// Check permissions
+const canEdit = RBACService.hasPermission(userId, 'incident:edit');
+
+// Get user permissions
+const permissions = RBACService.getUserPermissions(userId);
+
+// Create team
+const team = RBACService.createTeam({
+  name: 'Operations',
+  description: 'SRE team',
+  memberIds: [],
+  tags: ['ops', 'sre'],
+});
+```
+
+#### AuditService
+Compliance and security logging.
+
+```tsx
+import { AuditService, AuditHelpers } from '@adapt/ui-toolkit';
+
+// Log incident action
+AuditHelpers.logIncident('created', incidentId, userId, userName);
+
+// Query audit log
+const events = AuditService.query({
+  eventTypes: ['incident.created', 'incident.resolved'],
+  startDate: new Date('2024-01-01'),
+  limit: 100,
+});
+
+// Get security events
+const securityEvents = AuditService.getSecurityEvents(50);
+
+// Export audit log
+const csv = AuditService.exportToCSV();
+```
+
+#### ReportingService
+Advanced reporting and scheduled reports.
+
+```tsx
+import { ReportingService } from '@adapt/ui-toolkit';
+
+// Create report definition
+const definition = ReportingService.createReportDefinition({
+  name: 'Weekly Executive Summary',
+  type: 'executive-summary',
+  format: 'pdf',
+  schedule: 'weekly',
+  recipients: ['exec@company.com'],
+  filters: { dateRange: { start, end } },
+  sections: [],
+  createdBy: 'user-1',
+  enabled: true,
+});
+
+// Generate report
+const report = await ReportingService.generateReport(definition.id, 'user-1');
+```
+
+#### TenantService
+Multi-tenancy and billing.
+
+```tsx
+import { TenantService } from '@adapt/ui-toolkit';
+
+// Create tenant
+const tenant = TenantService.createTenant({
+  name: 'Acme Corp',
+  slug: 'acme-corp',
+  planId: 'professional',
+  status: 'active',
+  owner: { name: 'John Doe', email: 'john@acme.com' },
+  billing: { /* ... */ },
+  settings: { /* ... */ },
+});
+
+// Check limits
+const limit = TenantService.checkLimit(tenantId, 'maxUsers');
+
+// Calculate bill
+const bill = TenantService.calculateBill(tenantId);
+
+// Get usage report
+const usage = TenantService.getUsageReport(tenantId);
 ```
 
 ## 🎯 React Hooks
@@ -194,30 +452,97 @@ Standalone widgets for embedding in any web page:
 ## 🏗️ Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                     ADAPT-UI Toolkit                        │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐     │
-│  │   Graph      │  │   Timeline   │  │     Chat     │     │
-│  │   Viewer     │  │    Viewer    │  │  Interface   │     │
-│  └──────────────┘  └──────────────┘  └──────────────┘     │
-│                                                             │
-│  ┌──────────────┐  ┌──────────────┐                        │
-│  │   Insights   │  │ Remediation  │                        │
-│  │    Panel     │  │    Viewer    │                        │
-│  └──────────────┘  └──────────────┘                        │
-│                                                             │
-├─────────────────────────────────────────────────────────────┤
-│                     React Hooks Layer                       │
-│   useRCAGraph | useTimeline | useChat | useInsights        │
-├─────────────────────────────────────────────────────────────┤
-│                      API Client Layer                       │
-│        AdaptAPIClient (REST + WebSocket support)            │
-├─────────────────────────────────────────────────────────────┤
-│                    Backend / Data Source                    │
-│         (Your RCA Engine, Telemetry, AI Agents)             │
-└─────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                        ADAPT-UI Enterprise Platform                          │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  ┌─────────────── PRESENTATION LAYER ─────────────────────────────┐         │
+│  │                                                                 │         │
+│  │  Core Components (v1.0)                                         │         │
+│  │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐          │         │
+│  │  │  Graph   │ │ Timeline │ │   Chat   │ │ Insights │          │         │
+│  │  │  Viewer  │ │  Viewer  │ │Interface │ │  Panel   │          │         │
+│  │  └──────────┘ └──────────┘ └──────────┘ └──────────┘          │         │
+│  │  ┌──────────┐ ┌──────────┐                                     │         │
+│  │  │Remedia-  │ │  Toast   │                                     │         │
+│  │  │  tion    │ │ System   │                                     │         │
+│  │  └──────────┘ └──────────┘                                     │         │
+│  │                                                                 │         │
+│  │  Collaboration Components (v2.0)                                │         │
+│  │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐          │         │
+│  │  │ Comment  │ │ Presence │ │ Activity │ │Annotation│          │         │
+│  │  │ Thread   │ │Indicator │ │   Feed   │ │  System  │          │         │
+│  │  └──────────┘ └──────────┘ └──────────┘ └──────────┘          │         │
+│  │                                                                 │         │
+│  │  Analytics Components (v4.0)                                    │         │
+│  │  ┌──────────┐                                                   │         │
+│  │  │   MTTR   │                                                   │         │
+│  │  │Dashboard │                                                   │         │
+│  │  └──────────┘                                                   │         │
+│  └─────────────────────────────────────────────────────────────────┘         │
+│                                                                              │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  ┌─────────────── CONTEXT & STATE LAYER ───────────────────────┐            │
+│  │                                                              │            │
+│  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │            │
+│  │  │Collaboration │  │    Toast     │  │   History    │      │            │
+│  │  │   Context    │  │   Context    │  │  (Undo/Redo) │      │            │
+│  │  └──────────────┘  └──────────────┘  └──────────────┘      │            │
+│  └──────────────────────────────────────────────────────────────┘            │
+│                                                                              │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  ┌─────────────── SERVICE LAYER ──────────────────────────────┐             │
+│  │                                                             │             │
+│  │  AI & Analysis (v3.0)                                       │             │
+│  │  ┌──────────┐                                               │             │
+│  │  │    AI    │  • Incident Summarization                     │             │
+│  │  │ Service  │  • Anomaly Detection                          │             │
+│  │  │          │  • Pattern Recognition                        │             │
+│  │  └──────────┘  • Predictive Analytics                       │             │
+│  │                                                             │             │
+│  │  Automation (v4.0)                                          │             │
+│  │  ┌──────────┐ ┌──────────┐ ┌──────────┐                    │             │
+│  │  │ Runbook  │ │ Webhook  │ │Analytics │                    │             │
+│  │  │ Service  │ │ Service  │ │ Service  │                    │             │
+│  │  └──────────┘ └──────────┘ └──────────┘                    │             │
+│  │                                                             │             │
+│  │  Enterprise (v5.0)                                          │             │
+│  │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐      │             │
+│  │  │   RBAC   │ │  Audit   │ │Reporting │ │  Tenant  │      │             │
+│  │  │ Service  │ │ Service  │ │ Service  │ │ Service  │      │             │
+│  │  └──────────┘ └──────────┘ └──────────┘ └──────────┘      │             │
+│  └─────────────────────────────────────────────────────────────┘             │
+│                                                                              │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  ┌─────────────── REACT HOOKS LAYER ──────────────────────────┐             │
+│  │  useRCAGraph | useTimeline | useChat | useInsights         │             │
+│  │  useRemediation | useHistory | useToast                    │             │
+│  └─────────────────────────────────────────────────────────────┘             │
+│                                                                              │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  ┌─────────────── API CLIENT LAYER ───────────────────────────┐             │
+│  │  AdaptAPIClient (REST + WebSocket)                          │             │
+│  │  • React Query integration                                  │             │
+│  │  • Exponential backoff retry                                │             │
+│  │  • Connection versioning                                    │             │
+│  │  • WebSocket heartbeat                                      │             │
+│  └─────────────────────────────────────────────────────────────┘             │
+│                                                                              │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  ┌─────────────── BACKEND / INTEGRATIONS ─────────────────────┐             │
+│  │  • RCA Engine (Your AI Agents)                              │             │
+│  │  • Telemetry & Observability Platform                       │             │
+│  │  • External Integrations (Slack, JIRA, PagerDuty, etc.)     │             │
+│  │  • SSO/SAML Provider                                        │             │
+│  │  • External Logging (Elasticsearch, Splunk, Datadog)        │             │
+│  └─────────────────────────────────────────────────────────────┘             │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## 🎨 Theming
@@ -243,13 +568,109 @@ module.exports = {
 
 See [docs/theming.md](docs/theming.md) for complete theming guide.
 
+## 💰 Pricing & Plans
+
+ADAPT-UI is available in 4 tiers to match your organization's needs:
+
+### Free Plan
+- **$0/month**
+- 3 users
+- 1 team
+- 50 incidents/month
+- Basic collaboration
+- 30-day data retention
+- Perfect for: Small teams, proof-of-concept
+
+### Starter Plan
+- **$99/month** + $10/user
+- 10 users
+- 3 teams
+- 500 incidents/month
+- AI insights & automation
+- 90-day data retention
+- Perfect for: Growing teams, startups
+
+### Professional Plan
+- **$499/month** + $25/user
+- 50 users
+- 10 teams
+- 5,000 incidents/month
+- Advanced RBAC & custom reports
+- SSO/SAML support
+- 1-year data retention
+- Priority support
+- Perfect for: Established companies, enterprise teams
+
+### Enterprise Plan
+- **$1,999/month** + $50/user
+- Unlimited users & teams
+- Unlimited incidents
+- All features included
+- Custom integrations
+- SLA guarantees
+- Unlimited data retention
+- Dedicated support
+- Perfect for: Large enterprises, mission-critical operations
+
+**Overage Charges:**
+- Storage: $0.10/GB beyond plan limit
+- API Calls: $0.01 per 1,000 calls beyond plan limit
+
 ## 📚 Documentation
 
+### Getting Started
+- [Quick Start Guide](docs/quick-start.md)
+- [Installation Guide](docs/installation.md)
+- [Configuration](docs/configuration.md)
+
+### Core Features
+- [RCA Graph Visualization](docs/features/rca-graph.md)
+- [Timeline & Events](docs/features/timeline.md)
+- [AI Chat Interface](docs/features/chat.md)
+- [Insights & Analysis](docs/features/insights.md)
+- [Remediation Plans](docs/features/remediation.md)
+
+### Collaboration (v2.0)
+- [Comments & Discussions](docs/features/comments.md)
+- [Real-time Presence](docs/features/presence.md)
+- [Activity Tracking](docs/features/activity.md)
+- [Annotations](docs/features/annotations.md)
+
+### AI & Machine Learning (v3.0)
+- [AI Incident Summaries](docs/features/ai-summaries.md)
+- [Anomaly Detection](docs/features/anomaly-detection.md)
+- [Pattern Recognition](docs/features/pattern-recognition.md)
+- [Predictive Analytics](docs/features/predictive-analytics.md)
+
+### Automation (v4.0)
+- [Runbook Engine](docs/features/runbooks.md)
+- [Webhook System](docs/features/webhooks.md)
+- [Integrations Guide](docs/integrations.md)
+- [MTTR Analytics](docs/features/mttr-analytics.md)
+
+### Enterprise Features (v5.0)
+- [RBAC & Permissions](docs/features/rbac.md)
+- [Audit Logging](docs/features/audit-logging.md)
+- [Advanced Reporting](docs/features/reporting.md)
+- [Multi-Tenancy](docs/features/multi-tenancy.md)
+- [Billing & Usage](docs/features/billing.md)
+
+### Technical Documentation
 - [Architecture Overview](docs/architecture.md)
+- [API Reference](docs/api-reference.md)
 - [Component Catalog](docs/component-catalog.md)
+- [Service Documentation](docs/services.md)
 - [Embedding Guide](docs/embedding-guide.md)
 - [Theming Guide](docs/theming.md)
-- [API Reference](docs/api-reference.md)
+- [Performance Optimization](docs/performance.md)
+- [Security Best Practices](docs/security.md)
+
+### Development
+- [Development Setup](docs/development.md)
+- [Contributing Guide](docs/contributing.md)
+- [Testing Guide](docs/testing.md)
+- [Deployment Guide](docs/deployment.md)
+- [CHANGELOG](CHANGELOG.md)
 
 ## 🔧 Development
 
