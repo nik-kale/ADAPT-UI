@@ -8,3 +8,4 @@ export * from './logger';
 export * from './graphExport';
 export * from './codeSplitting';
 export * from './constants';
+export * from './errorHandlers';
