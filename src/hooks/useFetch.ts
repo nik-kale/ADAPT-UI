@@ -13,7 +13,7 @@ export interface FetchOptions {
    * Useful when you want to trigger the fetch manually
    */
   skip?: boolean;
-  
+
   /**
    * Retry the fetch on error
    */
@@ -25,20 +25,20 @@ export interface FetchOptions {
 
 /**
  * Generic hook for fetching data with automatic loading/error state management
- * 
+ *
  * @param fetcher - Async function that performs the fetch operation
  * @param deps - Dependency array that triggers a re-fetch when changed
  * @param options - Optional configuration for fetch behavior
- * 
+ *
  * @returns Object containing data, loading state, and error state
- * 
+ *
  * @example
  * ```tsx
  * const { data, loading, error } = useFetch(
  *   () => client.getRCAGraph(incidentId),
  *   [incidentId]
  * );
- * 
+ *
  * if (loading) return <Spinner />;
  * if (error) return <Error message={error} />;
  * return <RCAGraphViewer graph={data} />;
@@ -71,7 +71,7 @@ export function useFetch<T>(
       } else {
         // Handle error response
         const errorMessage = response.error?.message || 'Request failed';
-        
+
         // Check if we should retry
         if (options.retry && attempt < options.retry.attempts) {
           setTimeout(() => {
@@ -81,7 +81,7 @@ export function useFetch<T>(
           }, options.retry.delayMs);
           return;
         }
-        
+
         setState({ data: null, loading: false, error: errorMessage });
       }
     } catch (err) {
@@ -91,7 +91,7 @@ export function useFetch<T>(
       }
 
       const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
-      
+
       // Check if we should retry
       if (options.retry && attempt < options.retry.attempts) {
         setTimeout(() => {
@@ -101,7 +101,7 @@ export function useFetch<T>(
         }, options.retry.delayMs);
         return;
       }
-      
+
       setState({ data: null, loading: false, error: errorMessage });
     }
   };
