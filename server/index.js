@@ -1,5 +1,9 @@
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import cookieParser from 'cookie-parser';
+import csurf from 'csurf';
 import { WebSocketServer } from 'ws';
 import { createServer } from 'http';
 import { URL } from 'url';
@@ -26,9 +30,72 @@ const wss = new WebSocketServer({
 
 const PORT = process.env.PORT || 3001;
 
-// Middleware
-app.use(cors());
+// Security Middleware
+// Helmet - security headers
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https:"],
+    },
+  },
+  crossOriginEmbedderPolicy: false, // Allow embedding for iframe usage
+}));
+
+// CORS - restrictive configuration
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',')
+  : ['http://localhost:5173', 'http://localhost:3000'];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl requests) in development
+    if (!origin && process.env.NODE_ENV !== 'production') {
+      return callback(null, true);
+    }
+    if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
+}));
+
+// Rate limiting - apply to API routes
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
+
+// Body parser and cookie parser (required for CSRF)
 app.use(express.json());
+app.use(cookieParser());
+
+// CSRF protection for state-changing operations
+// Note: GET requests don't require CSRF token, POST/PATCH/DELETE do
+const csrfProtection = csurf({
+  cookie: {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+  },
+});
+
+// CSRF token endpoint (public, no rate limit)
+app.get('/api/csrf-token', csrfProtection, (req, res) => {
+  res.json({ csrfToken: req.csrfToken() });
+});
+
+// Apply rate limiting to all API routes
+app.use('/api/', apiLimiter);
 
 // WebSocket handling
 const clients = new Map();
@@ -167,7 +234,7 @@ app.get('/api/chat/:incidentId', (req, res) => {
   res.json(session);
 });
 
-app.post('/api/chat/:incidentId/message', (req, res) => {
+app.post('/api/chat/:incidentId/message', csrfProtection, (req, res) => {
   const { message } = req.body;
   if (!message) {
     return res.status(400).json({ error: 'Message is required' });
@@ -199,7 +266,7 @@ app.get('/api/remediation/:incidentId', (req, res) => {
   res.json(plan);
 });
 
-app.patch('/api/remediation/:incidentId/steps/:stepId', (req, res) => {
+app.patch('/api/remediation/:incidentId/steps/:stepId', csrfProtection, (req, res) => {
   const { status } = req.body;
   if (!status) {
     return res.status(400).json({ error: 'Status is required' });
