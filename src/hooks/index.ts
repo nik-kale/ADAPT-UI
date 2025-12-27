@@ -1,7 +1,8 @@
-// Export new utilities (keyboard, touch, search)
+// Export new utilities (keyboard, touch, search, fetch)
 export * from './useKeyboardNavigation';
 export * from './useTouchGestures';
 export * from './useGraphSearch';
+export * from './useFetch';
 
 // Re-export React Query hooks as primary hooks
 export {

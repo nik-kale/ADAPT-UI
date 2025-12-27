@@ -1,34 +1,41 @@
 import { useState, useEffect } from 'react';
 import { InsightStream, AgentInsight } from '@types/index';
 import { defaultClient } from '@api/client';
+import { useFetch } from './useFetch';
+import { logger } from '../utils/logger';
 
+/**
+ * Hook for managing insights with automatic fetching and optional real-time updates.
+ *
+ * @param incidentId - The unique identifier for the incident to fetch
+ * @param enableRealtime - Whether to enable WebSocket for real-time insight updates
+ * @returns Object containing insights array, isLive status, loading state, error state, and refetch function
+ *
+ * @example
+ * ```tsx
+ * const { insights, isLive, loading, error } = useInsights('inc-123', true);
+ * if (loading) return <Spinner />;
+ * if (error) return <Error message={error} />;
+ * return <InsightsPanel insights={insights} isLive={isLive} />;
+ * ```
+ */
 export const useInsights = (incidentId: string, enableRealtime = false) => {
-  const [insights, setInsights] = useState<AgentInsight[]>([]);
-  const [isLive, setIsLive] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: insightStream, loading, error, refetch } = useFetch<InsightStream>(
+    () => defaultClient.getInsights(incidentId),
+    [incidentId],
+    { skip: !incidentId }
+  );
 
+  const [insights, setInsights] = useState<AgentInsight[]>(insightStream?.insights || []);
+  const [isLive, setIsLive] = useState(insightStream?.isLive || false);
+
+  // Sync local state with fetched data
   useEffect(() => {
-    const fetchInsights = async () => {
-      setLoading(true);
-      setError(null);
-
-      const response = await defaultClient.getInsights(incidentId);
-
-      if (response.success && response.data) {
-        setInsights(response.data.insights);
-        setIsLive(response.data.isLive);
-      } else {
-        setError(response.error?.message || 'Failed to load insights');
-      }
-
-      setLoading(false);
-    };
-
-    if (incidentId) {
-      fetchInsights();
+    if (insightStream) {
+      setInsights(insightStream.insights);
+      setIsLive(insightStream.isLive);
     }
-  }, [incidentId]);
+  }, [insightStream]);
 
   // WebSocket for real-time updates
   useEffect(() => {
@@ -44,10 +51,13 @@ export const useInsights = (incidentId: string, enableRealtime = false) => {
           setInsights(prev => [...prev, data.payload]);
         }
       },
-      (error) => {
+      (wsError) => {
         if (isMounted) {
-          console.error('WebSocket error:', error);
-          setError('WebSocket connection error');
+          logger.error('WebSocket error', wsError, {
+            component: 'useInsights',
+            action: 'webSocketError',
+            incidentId
+          });
         }
       }
     );
@@ -58,5 +68,5 @@ export const useInsights = (incidentId: string, enableRealtime = false) => {
     };
   }, [incidentId, enableRealtime]);
 
-  return { insights, isLive, loading, error };
+  return { insights, isLive, loading, error, refetch };
 };
