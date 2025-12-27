@@ -3,6 +3,8 @@
  * Provides: Runbook execution, step tracking, conditional logic
  */
 
+import { logger } from '../utils/logger';
+
 export interface RunbookStep {
   id: string;
   name: string;
@@ -257,7 +259,12 @@ export class RunbookService {
     const url = this.interpolate(String(config.url), context);
     const method = config.method || 'GET';
 
-    console.log(`[Runbook] API Call: ${method} ${url}`);
+    logger.info('Runbook API call step', {
+      component: 'RunbookService',
+      action: 'executeApiCallStep',
+      method,
+      url
+    });
 
     // In production, use actual fetch
     return {
@@ -271,7 +278,11 @@ export class RunbookService {
     context: Record<string, unknown>
   ): Promise<unknown> {
     // Simulate script execution
-    console.log(`[Runbook] Script: ${config.command}`);
+    logger.info('Runbook script step', {
+      component: 'RunbookService',
+      action: 'executeScriptStep',
+      command: config.command
+    });
 
     return {
       exitCode: 0,
@@ -285,7 +296,11 @@ export class RunbookService {
   ): Promise<unknown> {
     // Simulate webhook call
     const url = this.interpolate(String(config.url), context);
-    console.log(`[Runbook] Webhook: POST ${url}`);
+    logger.info('Runbook webhook step', {
+      component: 'RunbookService',
+      action: 'executeWebhookStep',
+      url
+    });
 
     return {
       delivered: true,
@@ -299,7 +314,11 @@ export class RunbookService {
   ): Promise<unknown> {
     // Simulate notification
     const message = this.interpolate(String(config.message), context);
-    console.log(`[Runbook] Notification: ${message}`);
+    logger.info('Runbook notification step', {
+      component: 'RunbookService',
+      action: 'executeNotificationStep',
+      message
+    });
 
     return {
       sent: true,

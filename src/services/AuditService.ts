@@ -3,6 +3,8 @@
  * Provides: Comprehensive activity logging, compliance, security monitoring
  */
 
+import { logger } from '../utils/logger';
+
 export type AuditEventType =
   // Authentication events
   | 'auth.login'
@@ -149,7 +151,11 @@ export class AuditService {
     if (this.events.length > this.maxEvents) {
       const removeCount = this.events.length - this.maxEvents;
       this.events.splice(0, removeCount);
-      console.log(`[Audit] Trimmed ${removeCount} old events`);
+      logger.info('Audit events trimmed', {
+        component: 'AuditService',
+        action: 'trimEvents',
+        removedCount: removeCount
+      });
     }
 
     // Log to console based on severity
@@ -393,7 +399,12 @@ export class AuditService {
     const removedCount = initialCount - this.events.length;
 
     if (removedCount > 0) {
-      console.log(`[Audit] Cleaned up ${removedCount} events older than ${this.retentionDays} days`);
+      logger.info('Audit events cleaned up', {
+        component: 'AuditService',
+        action: 'cleanupOldEvents',
+        removedCount,
+        retentionDays: this.retentionDays
+      });
     }
   }
 
@@ -411,7 +422,13 @@ export class AuditService {
 
     // For now, just a placeholder
     if (event.severity === 'critical') {
-      console.error('[Audit] CRITICAL EVENT:', event);
+      logger.error('Critical audit event detected', undefined, {
+        component: 'AuditService',
+        action: 'logEvent',
+        eventType: event.type,
+        eventId: event.id,
+        severity: event.severity
+      });
     }
   }
 
@@ -617,5 +634,8 @@ if (typeof window !== 'undefined') {
     success: true,
   });
 
-  console.log('[Audit] Sample audit events created');
+  logger.info('Sample audit events created', {
+    component: 'AuditService',
+    action: 'createSampleEvents'
+  });
 }

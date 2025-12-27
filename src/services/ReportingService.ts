@@ -6,6 +6,7 @@
 import { AnalyticsService, IncidentRecord } from './AnalyticsService';
 import { AuditService, AuditEvent } from './AuditService';
 import { RBACService } from './RBACService';
+import { logger } from '../utils/logger';
 
 export type ReportType =
   | 'executive-summary'
@@ -109,7 +110,12 @@ export class ReportingService {
     }
 
     this.definitions.set(id, definition);
-    console.log(`[Reporting] Created report definition: ${definition.name}`);
+    logger.info('Report definition created', {
+      component: 'ReportingService',
+      action: 'createReportDefinition',
+      definitionId: definition.id,
+      reportType: definition.type
+    });
     return definition;
   }
 
@@ -135,7 +141,11 @@ export class ReportingService {
     }
 
     this.definitions.set(id, updated);
-    console.log(`[Reporting] Updated report definition: ${id}`);
+    logger.info('Report definition updated', {
+      component: 'ReportingService',
+      action: 'updateReportDefinition',
+      definitionId: id
+    });
     return updated;
   }
 
@@ -145,7 +155,11 @@ export class ReportingService {
   static deleteReportDefinition(id: string): boolean {
     const result = this.definitions.delete(id);
     if (result) {
-      console.log(`[Reporting] Deleted report definition: ${id}`);
+      logger.info('Report definition deleted', {
+        component: 'ReportingService',
+        action: 'deleteReportDefinition',
+        definitionId: id
+      });
     }
     return result;
   }
@@ -166,7 +180,12 @@ export class ReportingService {
       throw new Error(`Report definition ${definitionId} not found`);
     }
 
-    console.log(`[Reporting] Generating report: ${definition.name}`);
+    logger.info('Report generation started', {
+      component: 'ReportingService',
+      action: 'generateReport',
+      definitionId: definition.id,
+      reportName: definition.name
+    });
 
     let reportData: ReportData;
 
@@ -218,7 +237,12 @@ export class ReportingService {
       this.sendReport(report, definition.recipients);
     }
 
-    console.log(`[Reporting] Generated report: ${report.id}`);
+    logger.info('Report generated successfully', {
+      component: 'ReportingService',
+      action: 'generateReport',
+      reportId: report.id,
+      definitionId: definition.id
+    });
     return report;
   }
 
@@ -668,7 +692,12 @@ export class ReportingService {
   }
 
   private static sendReport(report: GeneratedReport, recipients: string[]): void {
-    console.log(`[Reporting] Sending report ${report.id} to ${recipients.join(', ')}`);
+    logger.info('Report sent', {
+      component: 'ReportingService',
+      action: 'sendReport',
+      reportId: report.id,
+      recipientCount: recipients.length
+    });
     // In production, integrate with email service (SendGrid, AWS SES, etc.)
   }
 

@@ -3,6 +3,7 @@ import cors from 'cors';
 import { WebSocketServer } from 'ws';
 import { createServer } from 'http';
 import { URL } from 'url';
+import { logger } from './logger.js';
 import {
   incidents,
   getIncident,
@@ -43,7 +44,11 @@ wss.on('connection', (ws, req) => {
   const pathParts = url.pathname.split('/').filter(Boolean);
   const incidentId = pathParts[pathParts.length - 1];
 
-  console.log(`WebSocket client connected for incident: ${incidentId}`);
+  logger.info('WebSocket client connected', {
+    component: 'WebSocketServer',
+    action: 'connection',
+    incidentId
+  });
 
   if (!incidentId || incidentId === 'ws') {
     ws.close(1008, 'Missing incident ID in path');
@@ -96,14 +101,22 @@ wss.on('connection', (ws, req) => {
   }, 10000); // Send update every 10 seconds
 
   ws.on('error', (error) => {
-    console.error(`WebSocket error for incident ${incidentId}:`, error);
+    logger.error('WebSocket error', error, {
+      component: 'WebSocketServer',
+      action: 'error',
+      incidentId
+    });
   });
 
   ws.on('close', () => {
     clearInterval(interval);
     clearInterval(heartbeatInterval);
     clients.delete(incidentId);
-    console.log(`WebSocket client disconnected for incident: ${incidentId}`);
+    logger.info('WebSocket client disconnected', {
+      component: 'WebSocketServer',
+      action: 'close',
+      incidentId
+    });
   });
 });
 
@@ -111,7 +124,10 @@ wss.on('connection', (ws, req) => {
 setInterval(() => {
   wss.clients.forEach((ws) => {
     if (!ws.isAlive) {
-      console.log('Terminating dead WebSocket connection');
+      logger.info('Terminating dead WebSocket connection', {
+        component: 'WebSocketServer',
+        action: 'heartbeat'
+      });
       return ws.terminate();
     }
 
@@ -215,6 +231,11 @@ app.patch('/api/remediation/:incidentId/steps/:stepId', (req, res) => {
 
 // Start server
 server.listen(PORT, () => {
-  console.log(`🚀 ADAPT-UI Mock API Server running on http://localhost:${PORT}`);
-  console.log(`   WebSocket endpoint: ws://localhost:${PORT}/ws/:incidentId`);
+  logger.info('ADAPT-UI Mock API Server started', {
+    component: 'Server',
+    action: 'start',
+    port: PORT,
+    httpEndpoint: `http://localhost:${PORT}`,
+    wsEndpoint: `ws://localhost:${PORT}/ws/:incidentId`
+  });
 });
