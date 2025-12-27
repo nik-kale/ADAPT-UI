@@ -3,6 +3,8 @@
  * Provides: User roles, permissions, access control, team management
  */
 
+import { logger } from '../utils/logger';
+
 export type Permission =
   // Incident permissions
   | 'incident:view'
@@ -265,7 +267,11 @@ export class RBACService {
       isSystem: true,
     });
 
-    console.log('[RBAC] Initialized with 6 system roles');
+    logger.info('RBAC initialized', {
+      component: 'RBACService',
+      action: 'init',
+      roleCount: 6
+    });
   }
 
   /**
@@ -280,7 +286,13 @@ export class RBACService {
       updatedAt: new Date(),
     };
     this.roles.set(id, newRole);
-    console.log(`[RBAC] Created role: ${newRole.displayName} (${id})`);
+    logger.info('Role created', {
+      component: 'RBACService',
+      action: 'createRole',
+      roleId: id,
+      roleName: newRole.displayName,
+      permissionCount: newRole.permissions.length
+    });
     return newRole;
   }
 
@@ -294,7 +306,12 @@ export class RBACService {
     }
 
     if (role.isSystem) {
-      console.warn(`[RBAC] Cannot modify system role: ${role.name}`);
+      logger.warn('Cannot modify system role', {
+        component: 'RBACService',
+        action: 'updateRole',
+        roleId: id,
+        roleName: role.name
+      });
       return null;
     }
 
@@ -304,7 +321,11 @@ export class RBACService {
       updatedAt: new Date(),
     };
     this.roles.set(id, updatedRole);
-    console.log(`[RBAC] Updated role: ${id}`);
+    logger.info('Role updated', {
+      component: 'RBACService',
+      action: 'updateRole',
+      roleId: id
+    });
     return updatedRole;
   }
 
@@ -318,19 +339,33 @@ export class RBACService {
     }
 
     if (role.isSystem) {
-      console.warn(`[RBAC] Cannot delete system role: ${role.name}`);
+      logger.warn('Cannot delete system role', {
+        component: 'RBACService',
+        action: 'deleteRole',
+        roleId: id,
+        roleName: role.name
+      });
       return false;
     }
 
     // Check if any users have this role
     const usersWithRole = Array.from(this.users.values()).filter(u => u.roleId === id);
     if (usersWithRole.length > 0) {
-      console.warn(`[RBAC] Cannot delete role ${id}: ${usersWithRole.length} users assigned`);
+      logger.warn('Cannot delete role with assigned users', {
+        component: 'RBACService',
+        action: 'deleteRole',
+        roleId: id,
+        assignedUserCount: usersWithRole.length
+      });
       return false;
     }
 
     this.roles.delete(id);
-    console.log(`[RBAC] Deleted role: ${id}`);
+    logger.info('Role deleted', {
+      component: 'RBACService',
+      action: 'deleteRole',
+      roleId: id
+    });
     return true;
   }
 
@@ -366,7 +401,13 @@ export class RBACService {
       createdAt: new Date(),
     };
     this.users.set(id, newUser);
-    console.log(`[RBAC] Created user: ${newUser.email} (${id})`);
+    logger.info('User created', {
+      component: 'RBACService',
+      action: 'createUser',
+      userId: id,
+      email: newUser.email,
+      roleId: newUser.roleId
+    });
     return newUser;
   }
 
@@ -384,7 +425,11 @@ export class RBACService {
       ...updates,
     };
     this.users.set(id, updatedUser);
-    console.log(`[RBAC] Updated user: ${id}`);
+    logger.info('User updated', {
+      component: 'RBACService',
+      action: 'updateUser',
+      userId: id
+    });
     return updatedUser;
   }
 
@@ -401,7 +446,11 @@ export class RBACService {
           team.leaderId = undefined;
         }
       });
-      console.log(`[RBAC] Deleted user: ${id}`);
+      logger.info('User deleted', {
+        component: 'RBACService',
+        action: 'deleteUser',
+        userId: id
+      });
     }
     return result;
   }
@@ -487,7 +536,12 @@ export class RBACService {
       updatedAt: new Date(),
     };
     this.teams.set(id, newTeam);
-    console.log(`[RBAC] Created team: ${newTeam.name} (${id})`);
+    logger.info('Team created', {
+      component: 'RBACService',
+      action: 'createTeam',
+      teamId: id,
+      teamName: newTeam.name
+    });
     return newTeam;
   }
 
@@ -506,7 +560,11 @@ export class RBACService {
       updatedAt: new Date(),
     };
     this.teams.set(id, updatedTeam);
-    console.log(`[RBAC] Updated team: ${id}`);
+    logger.info('Team updated', {
+      component: 'RBACService',
+      action: 'updateTeam',
+      teamId: id
+    });
     return updatedTeam;
   }
 
@@ -520,7 +578,11 @@ export class RBACService {
       this.users.forEach(user => {
         user.teamIds = user.teamIds.filter(teamId => teamId !== id);
       });
-      console.log(`[RBAC] Deleted team: ${id}`);
+      logger.info('Team deleted', {
+        component: 'RBACService',
+        action: 'deleteTeam',
+        teamId: id
+      });
     }
     return result;
   }
@@ -571,7 +633,12 @@ export class RBACService {
       team.updatedAt = new Date();
     }
 
-    console.log(`[RBAC] Added user ${userId} to team ${teamId}`);
+    logger.info('User added to team', {
+      component: 'RBACService',
+      action: 'addUserToTeam',
+      userId,
+      teamId
+    });
     return true;
   }
 
@@ -594,7 +661,12 @@ export class RBACService {
       team.leaderId = undefined;
     }
 
-    console.log(`[RBAC] Removed user ${userId} from team ${teamId}`);
+    logger.info('User removed from team', {
+      component: 'RBACService',
+      action: 'removeUserFromTeam',
+      userId,
+      teamId
+    });
     return true;
   }
 
@@ -616,7 +688,12 @@ export class RBACService {
     team.leaderId = userId;
     team.updatedAt = new Date();
 
-    console.log(`[RBAC] Set user ${userId} as leader of team ${teamId}`);
+    logger.info('Team leader set', {
+      component: 'RBACService',
+      action: 'setTeamLeader',
+      userId,
+      teamId
+    });
     return true;
   }
 
@@ -721,6 +798,9 @@ if (typeof window !== 'undefined') {
     RBACService.addUserToTeam(admin.id, devTeam.id);
     RBACService.setTeamLeader(devTeam.id, admin.id);
 
-    console.log('[RBAC] Created demo users and teams');
+    logger.info('Demo users and teams created', {
+      component: 'RBACService',
+      action: 'createDemoData'
+    });
   }
 }

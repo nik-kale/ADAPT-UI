@@ -3,6 +3,8 @@
  * Provides: Webhook delivery, retry logic, event subscriptions
  */
 
+import { logger } from '../utils/logger';
+
 export type WebhookEvent =
   | 'incident.created'
   | 'incident.updated'
@@ -72,7 +74,13 @@ export class WebhookService {
       enabled: webhook.enabled ?? true,
     };
     this.webhooks.set(id, newWebhook);
-    console.log(`[Webhook] Registered webhook: ${newWebhook.name} (${id})`);
+    logger.info('Webhook registered', {
+      component: 'WebhookService',
+      action: 'registerWebhook',
+      webhookId: id,
+      webhookName: newWebhook.name,
+      eventCount: newWebhook.events.length
+    });
     return newWebhook;
   }
 
@@ -91,7 +99,11 @@ export class WebhookService {
       updatedAt: new Date(),
     };
     this.webhooks.set(id, updatedWebhook);
-    console.log(`[Webhook] Updated webhook: ${id}`);
+    logger.info('Webhook updated', {
+      component: 'WebhookService',
+      action: 'updateWebhook',
+      webhookId: id
+    });
     return updatedWebhook;
   }
 
@@ -101,7 +113,11 @@ export class WebhookService {
   static deleteWebhook(id: string): boolean {
     const result = this.webhooks.delete(id);
     if (result) {
-      console.log(`[Webhook] Deleted webhook: ${id}`);
+      logger.info('Webhook deleted', {
+        component: 'WebhookService',
+        action: 'deleteWebhook',
+        webhookId: id
+      });
     }
     return result;
   }
@@ -128,7 +144,12 @@ export class WebhookService {
       wh => wh.enabled && wh.events.includes(event)
     );
 
-    console.log(`[Webhook] Triggering event: ${event} (${subscribedWebhooks.length} subscribers)`);
+    logger.info('Webhook event triggered', {
+      component: 'WebhookService',
+      action: 'triggerEvent',
+      event,
+      subscriberCount: subscribedWebhooks.length
+    });
 
     const deliveryPromises = subscribedWebhooks.map(webhook =>
       this.deliverWebhook(webhook, event, data)
@@ -188,7 +209,14 @@ export class WebhookService {
     delivery.status = 'pending';
 
     try {
-      console.log(`[Webhook] Delivering to ${webhook.url} (attempt ${delivery.attempts}/${delivery.maxAttempts})`);
+      logger.info('Webhook delivery attempt', {
+        component: 'WebhookService',
+        action: 'deliverWebhook',
+        webhookUrl: webhook.url,
+        attempt: delivery.attempts,
+        maxAttempts: delivery.maxAttempts,
+        deliveryId: delivery.id
+      });
 
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
@@ -217,13 +245,25 @@ export class WebhookService {
         delivery.status = 'delivered';
         delivery.deliveredAt = new Date();
         webhook.lastTriggeredAt = new Date();
-        console.log(`[Webhook] Successfully delivered to ${webhook.url}`);
+        logger.info('Webhook delivered successfully', {
+          component: 'WebhookService',
+          action: 'deliverWebhook',
+          webhookUrl: webhook.url,
+          deliveryId: delivery.id,
+          responseStatus: response.status
+        });
       } else {
         throw new Error(`HTTP ${response.status}: ${delivery.responseBody}`);
       }
     } catch (error) {
       delivery.error = error instanceof Error ? error.message : 'Unknown error';
-      console.error(`[Webhook] Delivery failed: ${delivery.error}`);
+      logger.error('Webhook delivery failed', undefined, {
+        component: 'WebhookService',
+        action: 'deliverWebhook',
+        webhookUrl: webhook.url,
+        deliveryId: delivery.id,
+        errorMessage: delivery.error
+      });
 
       // Schedule retry if attempts remaining
       if (delivery.attempts < delivery.maxAttempts) {
@@ -233,9 +273,14 @@ export class WebhookService {
 
         this.retryQueue.push(delivery);
 
-        console.log(
-          `[Webhook] Scheduling retry in ${retryDelay}ms (attempt ${delivery.attempts + 1}/${delivery.maxAttempts})`
-        );
+        logger.info('Webhook delivery retry scheduled', {
+          component: 'WebhookService',
+          action: 'scheduleRetry',
+          deliveryId: delivery.id,
+          retryInMs: retryDelay,
+          nextAttempt: delivery.attempts + 1,
+          maxAttempts: delivery.maxAttempts
+        });
 
         // Schedule retry
         setTimeout(() => {
@@ -243,7 +288,12 @@ export class WebhookService {
         }, retryDelay);
       } else {
         delivery.status = 'failed';
-        console.error(`[Webhook] Delivery permanently failed after ${delivery.attempts} attempts`);
+        logger.error('Webhook delivery permanently failed', undefined, {
+          component: 'WebhookService',
+          action: 'deliverWebhook',
+          deliveryId: delivery.id,
+          attempts: delivery.attempts
+        });
       }
     }
 
@@ -322,7 +372,12 @@ export class WebhookService {
    * Mock fetch for development (replace with actual fetch in production)
    */
   private static async mockFetch(url: string, options: RequestInit): Promise<Response> {
-    console.log(`[Mock Fetch] POST ${url}`);
+    logger.debug('Mock fetch POST request', {
+      component: 'WebhookService',
+      action: 'mockFetch',
+      url,
+      method: 'POST'
+    });
 
     // Simulate network delay
     await new Promise(resolve => setTimeout(resolve, 100));

@@ -3,6 +3,8 @@
  * Provides: Tenant isolation, resource quotas, billing, tenant management
  */
 
+import { logger } from '../utils/logger';
+
 export interface TenantPlan {
   id: string;
   name: 'free' | 'starter' | 'professional' | 'enterprise';
@@ -257,7 +259,11 @@ export class TenantService {
       },
     });
 
-    console.log('[Tenant] Initialized with 4 pricing plans');
+    logger.info('Tenant service initialized', {
+      component: 'TenantService',
+      action: 'init',
+      planCount: 4
+    });
   }
 
   /**
@@ -290,7 +296,13 @@ export class TenantService {
     };
 
     this.tenants.set(id, newTenant);
-    console.log(`[Tenant] Created tenant: ${newTenant.name} (${id})`);
+    logger.info('Tenant created', {
+      component: 'TenantService',
+      action: 'createTenant',
+      tenantId: id,
+      tenantName: newTenant.name,
+      planId: plan.id
+    });
     return newTenant;
   }
 
@@ -310,7 +322,11 @@ export class TenantService {
     };
 
     this.tenants.set(id, updatedTenant);
-    console.log(`[Tenant] Updated tenant: ${id}`);
+    logger.info('Tenant updated', {
+      component: 'TenantService',
+      action: 'updateTenant',
+      tenantId: id
+    });
     return updatedTenant;
   }
 
@@ -320,7 +336,11 @@ export class TenantService {
   static deleteTenant(id: string): boolean {
     const result = this.tenants.delete(id);
     if (result) {
-      console.log(`[Tenant] Deleted tenant: ${id}`);
+      logger.info('Tenant deleted', {
+        component: 'TenantService',
+        action: 'deleteTenant',
+        tenantId: id
+      });
     }
     return result;
   }
@@ -421,7 +441,13 @@ export class TenantService {
     }
 
     tenant.usage[metric] = (tenant.usage[metric] as number) + amount;
-    console.log(`[Tenant] Incremented ${metric} for tenant ${tenantId}: ${tenant.usage[metric]}`);
+    logger.info('Tenant usage incremented', {
+      component: 'TenantService',
+      action: 'incrementUsage',
+      tenantId,
+      metric,
+      newValue: tenant.usage[metric]
+    });
   }
 
   /**
@@ -437,7 +463,11 @@ export class TenantService {
     tenant.usage.apiCalls = 0;
     tenant.usage.lastResetAt = new Date();
 
-    console.log(`[Tenant] Reset monthly usage for tenant ${tenantId}`);
+    logger.info('Tenant monthly usage reset', {
+      component: 'TenantService',
+      action: 'resetMonthlyUsage',
+      tenantId
+    });
   }
 
   /**
@@ -467,7 +497,12 @@ export class TenantService {
     };
 
     this.invitations.set(id, invitation);
-    console.log(`[Tenant] Created invitation for ${email} to tenant ${tenantId}`);
+    logger.info('Tenant invitation created', {
+      component: 'TenantService',
+      action: 'createInvitation',
+      tenantId,
+      email
+    });
 
     // In production, send email with invitation link
     this.sendInvitationEmail(invitation);
@@ -486,17 +521,30 @@ export class TenantService {
     }
 
     if (invitation.acceptedAt) {
-      console.warn(`[Tenant] Invitation ${invitation.id} already accepted`);
+      logger.warn('Invitation already accepted', {
+        component: 'TenantService',
+        action: 'acceptInvitation',
+        invitationId: invitation.id
+      });
       return null;
     }
 
     if (new Date() > invitation.expiresAt) {
-      console.warn(`[Tenant] Invitation ${invitation.id} has expired`);
+      logger.warn('Invitation expired', {
+        component: 'TenantService',
+        action: 'acceptInvitation',
+        invitationId: invitation.id
+      });
       return null;
     }
 
     invitation.acceptedAt = new Date();
-    console.log(`[Tenant] Invitation ${invitation.id} accepted`);
+    logger.info('Invitation accepted', {
+      component: 'TenantService',
+      action: 'acceptInvitation',
+      invitationId: invitation.id,
+      tenantId: invitation.tenantId
+    });
 
     return invitation;
   }
@@ -627,8 +675,12 @@ export class TenantService {
 
   private static sendInvitationEmail(invitation: TenantInvitation): void {
     // In production, integrate with email service
-    console.log(`[Tenant] Sending invitation email to ${invitation.email}`);
-    console.log(`[Tenant] Invitation link: /accept-invite?token=${invitation.token}`);
+    logger.info('Sending invitation email', {
+      component: 'TenantService',
+      action: 'sendInvitationEmail',
+      email: invitation.email,
+      invitationLink: `/accept-invite?token=${invitation.token}`
+    });
   }
 }
 
@@ -675,5 +727,9 @@ if (typeof window !== 'undefined') {
   TenantService.incrementUsage(demoTenant.id, 'storageGB', 35);
   TenantService.incrementUsage(demoTenant.id, 'apiCalls', 45000);
 
-  console.log('[Tenant] Created demo tenant: Acme Corporation');
+  logger.info('Demo tenant created', {
+    component: 'TenantService',
+    action: 'createDemoTenant',
+    tenantName: 'Acme Corporation'
+  });
 }
