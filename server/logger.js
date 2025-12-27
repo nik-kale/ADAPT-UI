@@ -46,8 +46,8 @@ class Logger {
       });
     } else {
       // Pretty format for development
-      const contextStr = Object.keys(mergedContext).length > 0 
-        ? ` ${JSON.stringify(mergedContext)}` 
+      const contextStr = Object.keys(mergedContext).length > 0
+        ? ` ${JSON.stringify(mergedContext)}`
         : '';
       return `[${timestamp}] [${level.toUpperCase()}] ${message}${contextStr}`;
     }
@@ -74,7 +74,7 @@ class Logger {
   error(message, error, context = {}) {
     if (this.shouldLog(LogLevel.ERROR)) {
       const errorContext = { ...context };
-      
+
       if (error) {
         if (error instanceof Error) {
           errorContext.error = {
@@ -86,7 +86,7 @@ class Logger {
           errorContext.error = error;
         }
       }
-      
+
       console.error(this.formatMessage(LogLevel.ERROR, message, errorContext));
     }
   }

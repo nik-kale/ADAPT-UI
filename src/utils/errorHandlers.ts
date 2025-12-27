@@ -7,19 +7,19 @@ import { logger } from './logger';
 
 /**
  * Setup global error handlers for the application
- * 
+ *
  * Catches:
  * - Uncaught JavaScript errors (window.onerror)
  * - Unhandled promise rejections (window.onunhandledrejection)
- * 
+ *
  * All errors are logged with structured context for debugging and monitoring.
  * Can be integrated with external error tracking services (Sentry, Datadog, etc.)
- * 
+ *
  * @example
  * ```tsx
  * // In your main.tsx or index.tsx
  * import { setupGlobalErrorHandlers } from '@utils/errorHandlers';
- * 
+ *
  * setupGlobalErrorHandlers();
  * ```
  */
@@ -39,7 +39,7 @@ export function setupGlobalErrorHandlers() {
 
     // Hook for external error tracking service
     // Example: Sentry.captureException(error);
-    
+
     // Return false to let the default handler run
     return false;
   };
@@ -47,7 +47,7 @@ export function setupGlobalErrorHandlers() {
   // Handle unhandled promise rejections
   window.onunhandledrejection = (event) => {
     const error = event.reason;
-    
+
     logger.error('Unhandled promise rejection', error, {
       component: 'GlobalErrorHandler',
       action: 'unhandledRejection',
@@ -59,7 +59,7 @@ export function setupGlobalErrorHandlers() {
 
     // Hook for external error tracking service
     // Example: Sentry.captureException(error);
-    
+
     // Prevent default browser console error
     // event.preventDefault();
   };
@@ -77,7 +77,7 @@ export function setupGlobalErrorHandlers() {
 export function teardownGlobalErrorHandlers() {
   window.onerror = null;
   window.onunhandledrejection = null;
-  
+
   logger.info('Global error handlers removed', {
     component: 'GlobalErrorHandler',
     action: 'teardown',
@@ -87,10 +87,10 @@ export function teardownGlobalErrorHandlers() {
 /**
  * Manually report an error to the global error tracking system
  * Useful for catching and reporting errors in try-catch blocks
- * 
+ *
  * @param error - The error to report
  * @param context - Additional context about where/why the error occurred
- * 
+ *
  * @example
  * ```tsx
  * try {
