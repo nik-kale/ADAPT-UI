@@ -1,32 +1,27 @@
-import { useState, useEffect } from 'react';
 import { TimelineData } from '@types/index';
 import { defaultClient } from '@api/client';
+import { useFetch } from './useFetch';
 
+/**
+ * Hook for managing timeline data with automatic fetching.
+ *
+ * @param incidentId - The unique identifier for the incident to fetch
+ * @returns Object containing timeline data, loading state, error state, and refetch function
+ *
+ * @example
+ * ```tsx
+ * const { timeline, loading, error, refetch } = useTimeline('inc-123');
+ * if (loading) return <Spinner />;
+ * if (error) return <Error message={error} />;
+ * return <TimelineViewer timeline={timeline} onRefresh={refetch} />;
+ * ```
+ */
 export const useTimeline = (incidentId: string) => {
-  const [timeline, setTimeline] = useState<TimelineData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: timeline, loading, error, refetch } = useFetch<TimelineData>(
+    () => defaultClient.getTimeline(incidentId),
+    [incidentId],
+    { skip: !incidentId }
+  );
 
-  useEffect(() => {
-    const fetchTimeline = async () => {
-      setLoading(true);
-      setError(null);
-
-      const response = await defaultClient.getTimeline(incidentId);
-
-      if (response.success && response.data) {
-        setTimeline(response.data);
-      } else {
-        setError(response.error?.message || 'Failed to load timeline');
-      }
-
-      setLoading(false);
-    };
-
-    if (incidentId) {
-      fetchTimeline();
-    }
-  }, [incidentId]);
-
-  return { timeline, loading, error };
+  return { timeline, loading, error, refetch };
 };

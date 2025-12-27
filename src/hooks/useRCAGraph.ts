@@ -1,32 +1,27 @@
-import { useState, useEffect } from 'react';
 import { RCAGraph } from '@types/index';
 import { defaultClient } from '@api/client';
+import { useFetch } from './useFetch';
 
+/**
+ * Hook for managing RCA graph data with automatic fetching and caching.
+ *
+ * @param incidentId - The unique identifier for the incident to fetch
+ * @returns Object containing graph data, loading state, error state, and refetch function
+ *
+ * @example
+ * ```tsx
+ * const { graph, loading, error, refetch } = useRCAGraph('inc-123');
+ * if (loading) return <Spinner />;
+ * if (error) return <Error message={error} />;
+ * return <RCAGraphViewer graph={graph} onRefresh={refetch} />;
+ * ```
+ */
 export const useRCAGraph = (incidentId: string) => {
-  const [graph, setGraph] = useState<RCAGraph | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: graph, loading, error, refetch } = useFetch<RCAGraph>(
+    () => defaultClient.getRCAGraph(incidentId),
+    [incidentId],
+    { skip: !incidentId }
+  );
 
-  useEffect(() => {
-    const fetchGraph = async () => {
-      setLoading(true);
-      setError(null);
-
-      const response = await defaultClient.getRCAGraph(incidentId);
-
-      if (response.success && response.data) {
-        setGraph(response.data);
-      } else {
-        setError(response.error?.message || 'Failed to load RCA graph');
-      }
-
-      setLoading(false);
-    };
-
-    if (incidentId) {
-      fetchGraph();
-    }
-  }, [incidentId]);
-
-  return { graph, loading, error };
+  return { graph, loading, error, refetch };
 };

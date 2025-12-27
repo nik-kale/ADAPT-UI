@@ -1,32 +1,42 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { RemediationPlan } from '@types/index';
 import { defaultClient } from '@api/client';
+import { useFetch } from './useFetch';
 
+/**
+ * Hook for managing remediation plan data with step status updates.
+ *
+ * @param incidentId - The unique identifier for the incident to fetch
+ * @returns Object containing plan data, loading state, error state, refetch function, and updateStepStatus function
+ *
+ * @example
+ * ```tsx
+ * const { plan, loading, error, updateStepStatus } = useRemediation('inc-123');
+ * if (loading) return <Spinner />;
+ * if (error) return <Error message={error} />;
+ * return <RemediationViewer plan={plan} onUpdateStep={updateStepStatus} />;
+ * ```
+ */
 export const useRemediation = (incidentId: string) => {
-  const [plan, setPlan] = useState<RemediationPlan | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: initialPlan, loading, error: fetchError, refetch } = useFetch<RemediationPlan>(
+    () => defaultClient.getRemediationPlan(incidentId),
+    [incidentId],
+    { skip: !incidentId }
+  );
 
-  useEffect(() => {
-    const fetchPlan = async () => {
-      setLoading(true);
-      setError(null);
+  // Use local state for plan to allow optimistic updates
+  const [plan, setPlan] = useState<RemediationPlan | null>(initialPlan);
+  const [error, setError] = useState<string | null>(fetchError);
 
-      const response = await defaultClient.getRemediationPlan(incidentId);
+  // Sync local plan state with fetched data
+  if (initialPlan !== plan && initialPlan !== null) {
+    setPlan(initialPlan);
+  }
 
-      if (response.success && response.data) {
-        setPlan(response.data);
-      } else {
-        setError(response.error?.message || 'Failed to load remediation plan');
-      }
-
-      setLoading(false);
-    };
-
-    if (incidentId) {
-      fetchPlan();
-    }
-  }, [incidentId]);
+  // Sync error state
+  if (fetchError !== error) {
+    setError(fetchError);
+  }
 
   const updateStepStatus = async (stepId: string, status: string) => {
     if (!plan) return;
@@ -52,5 +62,5 @@ export const useRemediation = (incidentId: string) => {
     }
   };
 
-  return { plan, loading, error, updateStepStatus };
+  return { plan, loading, error, updateStepStatus, refetch };
 };
