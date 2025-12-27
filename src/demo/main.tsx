@@ -6,6 +6,10 @@ import App from './App';
 import '../styles/globals.css';
 import { queryClient } from '@api/queryClient';
 import { ErrorBoundary } from '@components/ErrorBoundary';
+import { setupGlobalErrorHandlers } from '@utils/errorHandlers';
+
+// Setup global error handlers for uncaught exceptions and promise rejections
+setupGlobalErrorHandlers();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
