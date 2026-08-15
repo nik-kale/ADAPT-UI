@@ -29,7 +29,7 @@
     "test:coverage": "vitest --coverage",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "audit": "npm audit --audit-level=moderate",
+    "audit": "npm audit --omit=dev --audit-level=high",
     "audit:fix": "npm audit fix"
   },
   "dependencies": {

@@ -12,6 +12,11 @@ dist
 dist-ssr
 *.local
 
+# tsc in `npm run build` has no outDir, so it emits next to the sources
+src/**/*.js
+src/**/*.d.ts
+src/**/*.d.ts.map
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

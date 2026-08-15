@@ -61,8 +61,12 @@ export const useGraphSearch = (nodes: RCANode[]) => {
         }
       }
 
-      // Confidence range filter
-      if (node.confidence !== undefined) {
+      // Confidence range filter. A node with no confidence value cannot be shown
+      // to meet an explicit threshold, so it is excluded whenever one is set.
+      if (filters.minConfidence !== undefined || filters.maxConfidence !== undefined) {
+        if (node.confidence === undefined) {
+          return false;
+        }
         if (filters.minConfidence !== undefined && node.confidence < filters.minConfidence) {
           return false;
         }
